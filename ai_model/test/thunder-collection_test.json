@@ -1,0 +1,62 @@
+{
+    "client": "Thunder Client",
+    "collectionName": "test",
+    "dateExported": "2024-03-22T14:35:30.233Z",
+    "version": "1.1",
+    "folders": [],
+    "requests": [
+        {
+            "_id": "b4517eda-200c-459c-8425-6c5eace8c254",
+            "colId": "d7ac10dc-cac7-43d1-ae2c-4643ed64c145",
+            "containerId": "",
+            "name": "test_with_img",
+            "url": "http://127.0.0.1:5000/detect",
+            "method": "POST",
+            "sortNum": 10000,
+            "created": "2024-03-21T19:29:07.592Z",
+            "modified": "2024-03-22T14:13:57.711Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"image_path\": \"/app/test/bus.jpg\",\n  \"confidence\": 0.5,\n  \"iou\": 0.5\n}",
+                "form": []
+            },
+            "reqType": "post",
+            "tests": []
+        },
+        {
+            "_id": "1f55f0ba-3f27-464c-9f92-8df8ac70afd9",
+            "colId": "d7ac10dc-cac7-43d1-ae2c-4643ed64c145",
+            "containerId": "",
+            "name": "health_check",
+            "url": "http://127.0.0.1:5000/health_check",
+            "method": "GET",
+            "sortNum": 20000,
+            "created": "2024-03-22T14:17:02.647Z",
+            "modified": "2024-03-22T14:17:14.478Z",
+            "headers": [],
+            "params": [],
+            "tests": []
+        },
+        {
+            "_id": "dbc01a3e-9275-470f-9794-84f704549fb2",
+            "colId": "d7ac10dc-cac7-43d1-ae2c-4643ed64c145",
+            "containerId": "",
+            "name": "load_model",
+            "url": "http://127.0.0.1:5000/load_model",
+            "method": "POST",
+            "sortNum": 30000,
+            "created": "2024-03-22T14:19:21.559Z",
+            "modified": "2024-03-22T14:21:31.065Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"model_name\": \"yolov8n\"\n}",
+                "form": []
+            },
+            "tests": []
+        }
+    ]
+}
