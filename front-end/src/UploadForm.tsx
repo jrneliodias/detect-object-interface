@@ -1,4 +1,4 @@
-import { ChangeEvent, useState } from "react"
+import { ChangeEvent } from "react"
 import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -11,7 +11,7 @@ interface UploadFileProps {
 }
 
 const UploadForm = ({ videoFile, onFileChange, onUpload }: UploadFileProps) => {
-    const [responseUpload, setResponseUpload] = useState<string>('')
+
 
 
     const handleUpload = async () => {
@@ -24,7 +24,6 @@ const UploadForm = ({ videoFile, onFileChange, onUpload }: UploadFileProps) => {
             const response = await await axios.post('http://localhost:8080/upload', formData)
 
 
-            setResponseUpload(response.data.message)
             toast.success(response.data.message)
         } catch (error) {
             toast.error("Error uploading file:" + error)
