@@ -7,9 +7,13 @@ from dataclasses import dataclass
 from flask import Flask, request, jsonify
 from smart_open import open
 from flask_cors import CORS
+import os
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 cors = CORS(app, origins='*')
+UPLOAD_FOLDER = 'uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
 @dataclass
@@ -122,17 +126,47 @@ class Model:
         return predictions
 
 
-@app.route("/api/users", methods=['GET'])
-def users():
-    return jsonify(
-        {
-            "users": [
-                'arpan',
-                'zach',
-                'jessie'
-            ]
-        }
-    )
+def extract_frames(video_path):
+    frames_folder = 'frames'
+
+    os.makedirs(frames_folder, exist_ok=True)
+
+    cap = cv2.VideoCapture(video_path)
+
+    frames_count = 0
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        frame_filename = f'frame_{frames_count}.png'
+
+        frame_path = os.path.join(frames_folder, frame_filename)
+        cv2.imwrite(frame_path, frame)
+
+        frames_count += 1
+    cap.release()
+    cv2.destroyAllWindows()
+    return frames_folder
+
+
+@app.route("/upload", methods=['POST'])
+def upload_file():
+    if 'video' not in request.files:
+        return jsonify({'error': 'no file part'})
+
+    video_file = request.files['video']
+
+    if video_file.filename == '':
+        return jsonify({'error': 'No selected file'})
+    if video_file:
+        secured_filename = secure_filename(video_file.filename)
+        video_path = './test/' + secured_filename
+        video_file.save(video_path)
+
+        frames_folder = extract_frames(video_path)
+        return jsonify({'message': 'Video saved successfully', 'frame_folder': frames_folder})
 
 
 model = Model("yolov8s")
@@ -140,10 +174,12 @@ model = Model("yolov8s")
 
 @app.route('/detect', methods=['POST'])
 def detect():
-    image_path = request.json['image_path']
+    current_directory = os.path.dirname(__file__)
+    relative_image_path = request.json['image_path']
     confidence = request.json['confidence']
     iou = request.json['iou']
-    with open(image_path, 'rb') as f:
+    # image_path = os.path.join(current_directory, relative_image_path)
+    with open(relative_image_path, 'rb') as f:
         original_img = Image.open(f).convert('RGB')
     predictions = model(original_img, confidence, iou)
     detections = [p.to_dict() for p in predictions]
