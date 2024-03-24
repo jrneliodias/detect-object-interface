@@ -25,7 +25,7 @@ const UploadForm = ({ videoFile, onFileChange, onUpload }: UploadFileProps) => {
 
 
             setResponseUpload(response.data.message)
-            toast.success(responseUpload)
+            toast.success(response.data.message)
         } catch (error) {
             toast.error("Error uploading file:" + error)
             console.log("Error uploading file:", error)
