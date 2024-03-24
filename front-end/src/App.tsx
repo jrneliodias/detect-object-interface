@@ -1,32 +1,36 @@
-import { useEffect, useState } from 'react'
+// import { useEffect, useState } from 'react'
+// import axios from 'axios'
+import { ChangeEvent, useState } from 'react'
 import './App.css'
-import axios from 'axios'
+import VideoPlayer from './components/videoplayer'
+import UploadForm from './UploadForm'
 
 function App() {
-  const fetchAPI = async () => {
-    const response = await axios.get("http://localhost:8080/api/users")
-    setArray(response.data.users)
-  }
-  const [array, setArray] = useState([])
+  const [videoFile, setVideoFile] = useState<File | null>(null)
+  const [videoURL, setVideoURL] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchAPI()
-  }, [])
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      const selectedVideo = event.target.files[0]
+      setVideoFile(selectedVideo)
+      const videoObjectURL = URL.createObjectURL(selectedVideo)
+      setVideoURL(videoObjectURL)
+    }
+  }
+
+  const handleUpload = () => {
+    if (!videoFile) return;
+    console.log('Vídeo selecionado:', videoFile);
+  };
 
   return (
     <>
+      <h2>Detector de objetos</h2>
+      <VideoPlayer videoPath={videoURL} />
 
-      {array.map((user, index) => (
-        <div key={index} style={{ display: 'flex', justifyContent: 'center', listStyleType: 'none', textAlign: 'center' }}>
-          <span > {user}</span>
-        </div>
-      ))}
-
-
-
+      <UploadForm videoFile={videoFile} onFileChange={handleFileChange} onUpload={handleUpload} />
     </>
   )
 }
 
 export default App
-''
