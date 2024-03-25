@@ -25,7 +25,7 @@ function App() {
 
   return (
     <>
-      <h2>Detector de objetos</h2>
+      <h2>AI Object Detection</h2>
       <VideoPlayer videoPath={videoURL} />
 
       <UploadForm videoFile={videoFile} onFileChange={handleFileChange} onUpload={handleUpload} />
