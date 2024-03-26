@@ -2,12 +2,12 @@
 // import axios from 'axios'
 import { ChangeEvent, useState } from 'react'
 import './App.css'
-import VideoPlayer from './components/videoplayer'
 import UploadForm from './UploadForm'
+import VideoCanvas from './components/videocanvas'
 
 function App() {
   const [videoFile, setVideoFile] = useState<File | null>(null)
-  const [videoURL, setVideoURL] = useState<string | null>(null);
+  const [videoURL, setVideoURL] = useState<string | undefined>(undefined);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -26,7 +26,9 @@ function App() {
   return (
     <>
       <h2>AI Object Detection</h2>
-      <VideoPlayer videoPath={videoURL} />
+      {videoURL && <VideoCanvas videoPath={videoURL} />}
+
+
 
       <UploadForm videoFile={videoFile} onFileChange={handleFileChange} onUpload={handleUpload} />
     </>

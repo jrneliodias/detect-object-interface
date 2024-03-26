@@ -1,14 +1,15 @@
-import numpy as np
 import cv2
 from PIL import Image
-import onnxruntime as ort
-from typing import List
-from dataclasses import dataclass
 from flask import Flask, request, jsonify
 from smart_open import open
 from flask_cors import CORS
 import os
 from werkzeug.utils import secure_filename
+from dataclass import *
+import datetime
+import io
+import json
+from utils import allowed_file
 
 app = Flask(__name__)
 cors = CORS(app, origins='*')
@@ -16,139 +17,74 @@ UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
-@dataclass
-class BBOX:
-    left: int
-    top: int
-    width: int
-    height: int
-
-
-@dataclass
-class Prediction:
-    class_name: int
-    confidence: float
-    box: BBOX
-
-    def to_dict(self):
-        return {
-            "class_name": str(self.class_name),
-            "confidence": float(self.confidence),
-            "box": {
-                "left": int(self.box.left),
-                "top": int(self.box.top),
-                "width": int(self.box.width),
-                "height": int(self.box.height)
-            }
-        }
-
-
-class Model:
-    def __init__(self, model_name: str):
-        self.model_name = model_name
-        providers = ort.get_available_providers()
-        print(f"Available providers: {providers}")
-        self.model = ort.InferenceSession(
-            f"models/{model_name}.onnx", providers=providers)
-        self.input_name = self.model.get_inputs()[0].name
-        self.output_name = self.model.get_outputs()[0].name
-        self.input_width = self.model.get_inputs()[0].shape[2]
-        self.input_height = self.model.get_inputs()[0].shape[3]
-        self.idx2class = eval(
-            self.model.get_modelmeta().custom_metadata_map['names'])
-
-    def preprocess(
-        self,
-        img: Image.Image
-    ) -> np.ndarray:
-        img = img.resize((self.input_width, self.input_height))
-        img = np.array(img).transpose(2, 0, 1)
-        img = np.expand_dims(img, axis=0)
-        img = img / 255.0
-        img = img.astype(np.float32)
-        return img
-
-    def postprocess(
-        self,
-        output: np.ndarray,
-        confidence_thresh: float,
-        iou_thresh: float,
-        img_width: int,
-        img_height: int
-    ) -> List[Prediction]:
-
-        outputs = np.transpose(np.squeeze(output[0]))
-        rows = outputs.shape[0]
-        boxes = []
-        scores = []
-        class_ids = []
-        x_factor = img_width / self.input_width
-        y_factor = img_height / self.input_height
-        for i in range(rows):
-            classes_scores = outputs[i][4:]
-            max_score = np.amax(classes_scores)
-            if max_score >= confidence_thresh:
-                class_id = np.argmax(classes_scores)
-                x, y, w, h = outputs[i][0], outputs[i][1], outputs[i][2], outputs[i][3]
-                left = int((x - w / 2) * x_factor)
-                top = int((y - h / 2) * y_factor)
-                width = int(w * x_factor)
-                height = int(h * y_factor)
-                class_ids.append(class_id)
-                scores.append(max_score)
-                boxes.append([left, top, width, height])
-        indices = cv2.dnn.NMSBoxes(
-            boxes, scores, confidence_thresh, iou_thresh)
-        detections = []
-        if len(indices) > 0:
-            for i in indices.flatten():
-                left, top, width, height = boxes[i]
-                class_id = class_ids[i]
-                score = scores[i]
-                detection = Prediction(
-                    class_name=self.idx2class[class_id],
-                    confidence=score,
-                    box=BBOX(left, top, width, height)
-                )
-                detections.append(detection)
-        return detections
-
-    def __call__(
-        self,
-        img: Image.Image,
-        confidence_thresh: float,
-        iou_thresh: float
-    ) -> List[Prediction]:
-        img_input = self.preprocess(img)
-        outputs = self.model.run(None, {self.input_name: img_input})
-        predictions = self.postprocess(
-            outputs, confidence_thresh, iou_thresh, img.width, img.height)
-        return predictions
-
-
-def extract_frames(video_path):
+def video_processor(video_path: str):
     frames_folder = 'frames'
 
+    current_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     os.makedirs(frames_folder, exist_ok=True)
+    video_filename = f'{current_datetime}.mp4'
+    output_video_path = os.path.join(frames_folder, video_filename)
 
     cap = cv2.VideoCapture(video_path)
-
-    frames_count = 0
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fourcc = cv2.VideoWriter_fourcc(*'avc1')
+    out = cv2.VideoWriter(output_video_path, fourcc, fps,
+                          (frame_width, frame_height))
 
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             break
 
-        frame_filename = f'frame_{frames_count}.png'
+        detections = detect(frame)
+        frame_with_detection = draw_box(frame, detections)
 
-        frame_path = os.path.join(frames_folder, frame_filename)
-        cv2.imwrite(frame_path, frame)
+        out.write(frame_with_detection)
 
-        frames_count += 1
     cap.release()
+    out.release()
     cv2.destroyAllWindows()
     return frames_folder
+
+
+def detect(image_data: str,
+           confidence: float = 0.7,
+           iou: float = 0.5,
+           output_file: str = 'detection.json'):
+
+    # image_path = os.path.join(current_directory, relative_image_path)
+    original_img = Image.fromarray(cv2.cvtColor(image_data, cv2.COLOR_BGR2RGB))
+    # original_img = Image.open(io.BytesIO(image_data)).convert('RGB')
+    predictions = model(original_img, confidence, iou)
+    detections = [p.to_dict() for p in predictions]
+
+    # Write detections to JSON file
+    with open(output_file, 'a') as f:
+        json.dump(detections, f)
+        f.write(',\n')  # Add a newline to separate detections
+    return detections
+
+
+def draw_box(frame: str, detections: list[dict]):
+    # Make a copy of the frame to avoid modifying the original
+    frame_with_rectangles = frame.copy()
+
+    # Loop through each detection
+    for detection in detections:
+        class_name = detection['class_name']
+        box = detection['box']
+        left, top, width, height = box.values()
+
+        # Draw rectangle on the frame
+        cv2.rectangle(frame_with_rectangles, (left, top),
+                      (left + width, top + height), (0, 255, 0), 2)
+        # Add class name text
+        cv2.putText(frame_with_rectangles, class_name, (left, top - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+
+    return frame_with_rectangles
 
 
 @app.route("/upload", methods=['POST'])
@@ -157,6 +93,7 @@ def upload_file():
         return jsonify({'error': 'no file part'})
 
     video_file = request.files['video']
+    allowed_file(video_file.filename)
 
     if video_file.filename == '':
         return jsonify({'error': 'No selected file'})
@@ -165,7 +102,7 @@ def upload_file():
         video_path = './test/' + secured_filename
         video_file.save(video_path)
 
-        frames_folder = extract_frames(video_path)
+        frames_folder = video_processor(video_path)
         return jsonify({'message': 'Video saved successfully', 'frame_folder': frames_folder})
 
 
@@ -173,20 +110,17 @@ model = Model("yolov8s")
 
 
 @app.route('/detect', methods=['POST'])
-def detect():
-    current_directory = os.path.dirname(__file__)
-    relative_image_path = request.json['image_path']
-    confidence = request.json['confidence']
-    iou = request.json['iou']
-    # image_path = os.path.join(current_directory, relative_image_path)
-    with open(relative_image_path, 'rb') as f:
-        original_img = Image.open(f).convert('RGB')
-    predictions = model(original_img, confidence, iou)
-    detections = [p.to_dict() for p in predictions]
-
-    return jsonify(detections)
-
-
+# def detect():
+#     current_directory = os.path.dirname(__file__)
+#     relative_image_path = request.json['image_path']
+#     confidence = request.json['confidence']
+#     iou = request.json['iou']
+#     # image_path = os.path.join(current_directory, relative_image_path)
+#     with open(relative_image_path, 'rb') as f:
+#         original_img = Image.open(f).convert('RGB')
+#     predictions = model(original_img, confidence, iou)
+#     detections = [p.to_dict() for p in predictions]
+#     return jsonify(detections)
 @app.route('/health_check', methods=['GET'])
 def health_check():
     if model is None:
