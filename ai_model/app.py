@@ -32,24 +32,33 @@ def upload_file():
 @app.route('/detect', methods=['POST'])
 def detect():
 
-    relative_video_path = request.json['video_path']
-    # confidence = request.json['confidence']
-    # iou = request.json['iou']
+    if 'confidence' not in request.json or 'iou' not in request.json:
+        return jsonify({'status': 400, 'error': 'model parameter is missing.'})
 
-    processed_video_path = video_processor(relative_video_path)
-    return jsonify({'message': 'Video processed successfully', 'processed_video_path': processed_video_path})
+    relative_video_path = request.json['video_path']
+    confidence = float(request.json['confidence'])
+    iou = float(request.json['iou'])
+
+    processed_video_path = video_processor(
+        relative_video_path,
+        confidence,
+        iou)
+    return jsonify({'message': 'Video processed successfully',
+                    'processed_video_path': processed_video_path})
 
 
 @app.route("/get-video/<path:name>")
 def get_video(name):
     # relative_video_path = request.args.get('video_path')
-    relative_video_path = 'C:/Users/jrnel/Downloads/full-stack-take-home-main/full-stack-take-home-main/ai_model/output-videos'
-    directory = 'output-videos'
 
-    if not relative_video_path:
+    directory = 'output-videos'
+    current_directory = os.getcwd()
+    video_path = os.path.join(current_directory, directory)
+
+    if not video_path:
         abort(404)
 
-    return send_from_directory(relative_video_path, name, as_attachment=True)
+    return send_from_directory(video_path, name, as_attachment=True)
 
 
 @app.route('/health_check', methods=['GET'])

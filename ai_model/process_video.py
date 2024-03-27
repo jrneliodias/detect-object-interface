@@ -10,7 +10,9 @@ import json
 model = Model("yolov8s")
 
 
-def video_processor(video_path: str):
+def video_processor(video_path: str,
+                    confidence: float = 0.7,
+                    iou: float = 0.5):
     video_filename, out, cap = get_video_config(video_path)
 
     while cap.isOpened():
@@ -18,7 +20,7 @@ def video_processor(video_path: str):
         if not ret:
             break
 
-        detections = detect_object(frame)
+        detections = detect_object(frame, confidence, iou)
         frame_with_detection = draw_box(frame, detections)
         out.write(frame_with_detection)
 
