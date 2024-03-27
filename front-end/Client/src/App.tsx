@@ -3,13 +3,13 @@
 import { ChangeEvent, useState } from 'react'
 import './App.css'
 import UploadForm from './UploadForm'
-import VideoCanvas from './components/videocanvas'
-import OutputVideoPlayer from './components/outputvideoplayer'
+import VideoPlayer from './components/videoplayer'
 
 function App() {
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [videoURL, setVideoURL] = useState<string | undefined>(undefined);
-  const [videoProcessed, setVideoProcessed] = useState<boolean>(false);
+  const [videoUploaded, setVideoUploaded] = useState<boolean>(false);
+  const [outputVideo, setOutputVideo] = useState<string | null>(null);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -21,27 +21,35 @@ function App() {
   }
 
   const handleVideoProcessed = () => {
-    setVideoProcessed(true)
+    setVideoUploaded(true)
+    console.log(videoUploaded)
 
   };
   const handleUpload = () => {
     if (!videoFile) return;
-    console.log('Vídeo selecionado:', videoFile);
+
 
   };
 
+  const handleVideoOutput = (videoURL: string) => {
+    setOutputVideo(videoURL)
+  }
   return (
-    <div >
-      <h2>AI Object Detection</h2>
-      {videoURL && <VideoCanvas videoPath={videoURL} />}
-
-
-      <OutputVideoPlayer videoProcessed={videoProcessed} />
+    <div className='main-app'>
+      <h1 className='text-2xl font-bold'>AI Object Detection</h1>
 
       <UploadForm videoFile={videoFile}
         onFileChange={handleFileChange}
         onUpload={handleUpload}
-        onVideoProcessed={handleVideoProcessed} />
+        onVideoProcessed={handleVideoProcessed}
+        onVideoOutput={handleVideoOutput} />
+
+      <div className="videos-container">
+        {videoURL && <VideoPlayer videoPath={videoURL} />}
+        {outputVideo && <VideoPlayer videoPath={outputVideo} />}
+      </div>
+
+
     </div>
   )
 }
