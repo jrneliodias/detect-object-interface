@@ -31,11 +31,11 @@ const OutputVideoPlayer = ({ videoProcessed }: OutputVideoPlayerProps) => {
     }
     return (
         <div>
-            <h3>Displaying Processed Video</h3>
-            {videoLoaded ? (
-                <video ref={videoRef} controls autoPlay></video>
-            ) : (
-                <p>Carregando Video...</p>
+            {videoLoaded && (
+                <div>
+                    <h3>Displaying Processed Video</h3>
+                    <video ref={videoRef} controls autoPlay width={'100%'}></video>
+                </div>
             )}
         </div>
     )

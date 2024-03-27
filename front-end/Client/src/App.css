@@ -12,3 +12,15 @@
 .read-the-docs {
   color: #888;
 }
+
+.videos-container {
+  display: flex;
+}
+.main-app {
+  width: 90vw;
+  min-width: 720px;
+}
+
+::placeholder {
+  margin-left: 10px;
+}

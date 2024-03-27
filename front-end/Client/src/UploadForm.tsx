@@ -1,19 +1,21 @@
-import { ChangeEvent, useState } from "react"
+import { ChangeEvent } from "react"
 import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Button } from "./components/ui/button";
+import { Input } from "./components/ui/input";
 
 interface UploadFileProps {
     videoFile: File | null
     onFileChange: (event: ChangeEvent<HTMLInputElement>) => void
     onUpload: () => void
     onVideoProcessed: () => void
+    onVideoOutput: (video: string) => void
 
 }
 
-const UploadForm = ({ videoFile, onFileChange, onUpload, onVideoProcessed }: UploadFileProps) => {
+const UploadForm = ({ videoFile, onFileChange, onUpload, onVideoProcessed, onVideoOutput }: UploadFileProps) => {
 
-    const [outputVideo, setOutputVideo] = useState<string | null>(null);
 
     const uploadFile = async () => {
 
@@ -77,8 +79,8 @@ const UploadForm = ({ videoFile, onFileChange, onUpload, onVideoProcessed }: Upl
 
             const videoBlobURL = URL.createObjectURL(new Blob([getProcessVideoResponse.data], { type: "video/mp4" }));
             toast.success('success in get the video')
-            setOutputVideo(videoBlobURL)
 
+            onVideoOutput(videoBlobURL)
 
         } catch (error) {
             toast.error("Error getting the video:" + error)
@@ -103,20 +105,17 @@ const UploadForm = ({ videoFile, onFileChange, onUpload, onVideoProcessed }: Upl
 
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", height: "100px", placeContent: "center space-between", marginTop: "20px" }}>
-            <input type="file" onChange={onFileChange} />
-            <button onClick={handleUpload}>Upload</button>
+        <div className="flex place-content-center gap-3 mt-3" >
 
-            {outputVideo && (
-                <div>
-                    <h2>Video</h2>
-                    {/* Use the videoBlob to display the video */}
-                    <video controls>
-                        <source src={outputVideo} type="video/mp4" />
-                        Your browser does not support the video tag.
-                    </video>
-                </div>
-            )}
+            <Input
+                id="picture"
+                type="file"
+                onChange={onFileChange}
+            />
+
+            <Input type="number" placeholder="confidence" style={{ paddingLeft: '10px' }} />
+            <Input type="number" placeholder="iou" style={{ paddingLeft: '10px' }} />
+            <Button onClick={handleUpload}>Upload</Button>
 
             <ToastContainer
                 position="bottom-right"
