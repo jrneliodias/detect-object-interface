@@ -5,12 +5,13 @@ import './App.css'
 import UploadForm from './UploadForm'
 import VideoPlayer from './components/videoplayer'
 import DetectTable from './components/detect-table'
+import { SkeletonVideo } from './components/skeleton-video'
 
 function App() {
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [videoURL, setVideoURL] = useState<string | undefined>(undefined);
-  const [videoUploaded, setVideoUploaded] = useState<boolean>(false);
   const [outputVideo, setOutputVideo] = useState<string | null>(null);
+  const [inProcess, setInProcess] = useState<boolean>(false)
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -21,9 +22,8 @@ function App() {
     }
   }
 
-  const handleVideoProcessed = () => {
-    setVideoUploaded(true)
-    console.log(videoUploaded)
+  const handleVideoProcessed = (inProcess: boolean) => {
+    setInProcess(inProcess)
 
   };
   const handleUpload = () => {
@@ -43,11 +43,13 @@ function App() {
         onFileChange={handleFileChange}
         onUpload={handleUpload}
         onVideoProcessed={handleVideoProcessed}
-        onVideoOutput={handleVideoOutput} />
+        onVideoOutput={handleVideoOutput}
+        inProcess={inProcess} />
 
       <div className="flex gap-5 justify-evenly">
         {videoURL && <VideoPlayer videoPath={videoURL} />}
-        {outputVideo && <VideoPlayer videoPath={outputVideo} />}
+        {inProcess && <SkeletonVideo />}
+        {outputVideo && !inProcess && <VideoPlayer videoPath={outputVideo} />}
       </div>
 
       <DetectTable />
