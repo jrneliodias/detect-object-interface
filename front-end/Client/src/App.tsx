@@ -35,7 +35,7 @@ function App() {
     setOutputVideo(videoURL)
   }
   return (
-    <div className='main-app'>
+    <main className='w-9/12 flex flex-col mx-auto gap-5'>
       <h1 className='text-2xl font-bold'>AI Object Detection</h1>
 
       <UploadForm videoFile={videoFile}
@@ -44,13 +44,13 @@ function App() {
         onVideoProcessed={handleVideoProcessed}
         onVideoOutput={handleVideoOutput} />
 
-      <div className="videos-container">
+      <div className="flex gap-5 justify-evenly">
         {videoURL && <VideoPlayer videoPath={videoURL} />}
         {outputVideo && <VideoPlayer videoPath={outputVideo} />}
       </div>
 
 
-    </div>
+    </main>
   )
 }
 

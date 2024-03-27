@@ -1,9 +1,10 @@
-import { ChangeEvent } from "react"
+import { ChangeEvent, useState } from "react"
 import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
+import { Label } from "@radix-ui/react-label";
 
 interface UploadFileProps {
     videoFile: File | null
@@ -16,6 +17,8 @@ interface UploadFileProps {
 
 const UploadForm = ({ videoFile, onFileChange, onUpload, onVideoProcessed, onVideoOutput }: UploadFileProps) => {
 
+
+    const [inProcess, setInProcess] = useState<boolean>(false)
 
     const uploadFile = async () => {
 
@@ -31,7 +34,6 @@ const UploadForm = ({ videoFile, onFileChange, onUpload, onVideoProcessed, onVid
             }
             toast.success(uploadResponse.data.message)
             const video_path = uploadResponse.data.video_path
-            console.log(video_path)
             return video_path
 
 
@@ -45,12 +47,11 @@ const UploadForm = ({ videoFile, onFileChange, onUpload, onVideoProcessed, onVid
     const detectObjects = async (video_path: string) => {
 
         try {
-
+            setInProcess(true)
             const processVideoResponse = await axios.post('http://localhost:8080/detect', {
                 video_path: video_path
             })
             const processed_video_path = processVideoResponse.data.processed_video_path
-            console.log(processed_video_path)
 
             toast.success(processVideoResponse.data.message)
             return processed_video_path
@@ -81,6 +82,8 @@ const UploadForm = ({ videoFile, onFileChange, onUpload, onVideoProcessed, onVid
             toast.success('success in get the video')
 
             onVideoOutput(videoBlobURL)
+            setInProcess(false)
+
 
         } catch (error) {
             toast.error("Error getting the video:" + error)
@@ -107,15 +110,18 @@ const UploadForm = ({ videoFile, onFileChange, onUpload, onVideoProcessed, onVid
     return (
         <div className="flex place-content-center gap-3 mt-3" >
 
-            <Input
-                id="picture"
-                type="file"
-                onChange={onFileChange}
-            />
-
-            <Input type="number" placeholder="confidence" style={{ paddingLeft: '10px' }} />
-            <Input type="number" placeholder="iou" style={{ paddingLeft: '10px' }} />
-            <Button onClick={handleUpload}>Upload</Button>
+            <div className="grid grid-cols-4 gap-x-3 min-w-40  w-full">
+                <Label className="">Choose the video</Label>
+                <Label className="col-span-3">Model Parameters</Label>
+                <Input
+                    id="picture"
+                    type="file"
+                    onChange={onFileChange}
+                />
+                <Input type="number" placeholder="confidence" style={{ paddingLeft: '10px' }} />
+                <Input type="number" placeholder="iou" style={{ paddingLeft: '10px' }} />
+                <Button onClick={handleUpload} disabled={inProcess} >Detect Objects</Button>
+            </div>
 
             <ToastContainer
                 position="bottom-right"
