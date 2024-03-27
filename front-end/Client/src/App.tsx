@@ -4,6 +4,7 @@ import { ChangeEvent, useState } from 'react'
 import './App.css'
 import UploadForm from './UploadForm'
 import VideoPlayer from './components/videoplayer'
+import DetectTable from './components/detect-table'
 
 function App() {
   const [videoFile, setVideoFile] = useState<File | null>(null)
@@ -48,6 +49,8 @@ function App() {
         {videoURL && <VideoPlayer videoPath={videoURL} />}
         {outputVideo && <VideoPlayer videoPath={outputVideo} />}
       </div>
+
+      <DetectTable />
 
 
     </main>
