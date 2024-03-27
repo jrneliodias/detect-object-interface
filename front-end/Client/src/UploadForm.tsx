@@ -10,34 +10,56 @@ interface UploadFileProps {
     videoFile: File | null
     onFileChange: (event: ChangeEvent<HTMLInputElement>) => void
     onUpload: () => void
-    onVideoProcessed: () => void
+    onVideoProcessed: (inProcess: boolean) => void
     onVideoOutput: (video: string) => void
+    inProcess: boolean
 
 }
 
-const UploadForm = ({ videoFile, onFileChange, onUpload, onVideoProcessed, onVideoOutput }: UploadFileProps) => {
+const UploadForm = ({ videoFile,
+    onFileChange,
+    onUpload,
+    onVideoProcessed,
+    onVideoOutput,
+    inProcess }: UploadFileProps) => {
 
 
-    const [inProcess, setInProcess] = useState<boolean>(false)
+    const [confidence, setConfidence] = useState<number | undefined>(0.7)
+    const [iou, setIOU] = useState<number | undefined>(0.5)
+
+
+    const handleConfidenceChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const confidenceValue = parseFloat(event.target.value)
+        if (isNaN(confidenceValue)) return
+        setConfidence(confidenceValue)
+        console.log(confidenceValue)
+    }
+
+    const handleIOUChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const iouValue = parseFloat(event.target.value)
+        if (isNaN(iouValue)) return
+        setIOU(iouValue)
+        console.log(iouValue)
+    }
 
     const uploadFile = async () => {
 
         try {
-            if (!videoFile) return
+            onVideoProcessed(true)
+            if (!videoFile || !confidence || !iou) return
             const formData = new FormData();
             formData.append('video', videoFile)
+
             onUpload()
             const uploadResponse = await axios.post('http://localhost:8080/upload', formData)
 
-            if (uploadResponse.status === 200) {
-                onVideoProcessed()
-            }
             toast.success(uploadResponse.data.message)
             const video_path = uploadResponse.data.video_path
             return video_path
 
 
         } catch (error) {
+            onVideoProcessed(false)
             toast.error("Error uploading file:" + error)
             throw error
 
@@ -47,9 +69,12 @@ const UploadForm = ({ videoFile, onFileChange, onUpload, onVideoProcessed, onVid
     const detectObjects = async (video_path: string) => {
 
         try {
-            setInProcess(true)
+            if (!confidence || !iou) return
+
             const processVideoResponse = await axios.post('http://localhost:8080/detect', {
-                video_path: video_path
+                video_path: video_path,
+                iou: iou.toString(),
+                confidence: confidence.toString()
             })
             const processed_video_path = processVideoResponse.data.processed_video_path
 
@@ -59,6 +84,7 @@ const UploadForm = ({ videoFile, onFileChange, onUpload, onVideoProcessed, onVid
 
 
         } catch (error) {
+            onVideoProcessed(false)
             toast.error("Error processing the video:" + error)
             throw error
 
@@ -82,10 +108,11 @@ const UploadForm = ({ videoFile, onFileChange, onUpload, onVideoProcessed, onVid
             toast.success('success in get the video')
 
             onVideoOutput(videoBlobURL)
-            setInProcess(false)
+            onVideoProcessed(false)
 
 
         } catch (error) {
+            onVideoProcessed(false)
             toast.error("Error getting the video:" + error)
             throw error
 
@@ -112,20 +139,33 @@ const UploadForm = ({ videoFile, onFileChange, onUpload, onVideoProcessed, onVid
 
             <div className="grid grid-cols-4 gap-x-3 min-w-40  w-full">
                 <Label className="">Choose the video</Label>
-                <Label className="col-span-3">Model Parameters</Label>
+                <Label className="">Confidence</Label>
+                <Label className="col-span-2">IOU</Label>
                 <Input
-                    id="picture"
                     type="file"
                     onChange={onFileChange}
+                    required
                 />
-                <Input type="number" placeholder="confidence" style={{ paddingLeft: '10px' }} />
-                <Input type="number" placeholder="iou" style={{ paddingLeft: '10px' }} />
+                <Input
+                    type="number"
+                    placeholder="confidence"
+                    value={confidence}
+                    onChange={handleConfidenceChange}
+                    required
+                />
+                <Input
+                    type="number"
+                    placeholder="iou"
+                    value={iou}
+                    onChange={handleIOUChange}
+                    required
+                />
                 <Button onClick={handleUpload} disabled={inProcess} >Detect Objects</Button>
             </div>
 
             <ToastContainer
                 position="bottom-right"
-                autoClose={3000}
+                autoClose={5000}
                 hideProgressBar={false}
                 newestOnTop={false}
                 closeOnClick
