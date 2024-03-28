@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres
+    container_name: ai-videos-object-detection
+    environment:
+      POSTGRES_PASSWORD: postgres2024
+      POSTGRES_USER: postgres
+      POSTGRES_DB: ai-detection
+    ports:
+      - "5432:5432"
+
+  migration:
+    image: postgres
+    volumes:
+      - ${PWD}/postgres/migrations:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_PASSWORD: postgres2024
+      POSTGRES_USER: postgres
+      POSTGRES_DB: ai-detection
+    command: ["true"]
