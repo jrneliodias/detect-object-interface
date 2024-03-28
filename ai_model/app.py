@@ -4,11 +4,38 @@ from werkzeug.utils import secure_filename
 from dataclass import *
 from process_video import *
 from utils import allowed_file
+# from postgres.db.insert_user import insert_user_input
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 cors = CORS(app, origins='*')
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres2024@localhost/ai-detection'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy()
+db.init_app(app)
+
+
+class UserInputs(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    serve_video_name = db.Column(db.String(50), nullable=False)
+    confidence_input = db.Column(db.DECIMAL(5, 4), nullable=False)
+    iou_input = db.Column(db.DECIMAL(5, 4), nullable=False)
+
+
+def save_user_input(video_name, confidence_input, iou_input):
+    try:
+        new_input = UserInputs(
+            video_name=video_name,
+            confidence_input=confidence_input,
+            iou_input=iou_input
+        )
+        db.session.add(new_input)
+        db.session.commit()
+        return new_input
+    except Exception as e:
+        print("Erro ao inserir dados:", str(e))
 
 
 @app.route("/upload", methods=['POST'])
@@ -43,6 +70,9 @@ def detect():
         relative_video_path,
         confidence,
         iou)
+
+    save_user_input(processed_video_path, confidence, iou)
+
     return jsonify({'message': 'Video processed successfully',
                     'processed_video_path': processed_video_path})
 
