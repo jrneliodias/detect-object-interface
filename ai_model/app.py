@@ -49,7 +49,6 @@ def detect():
 
 @app.route("/get-video/<path:name>")
 def get_video(name):
-    # relative_video_path = request.args.get('video_path')
 
     directory = 'output-videos'
     current_directory = os.getcwd()
