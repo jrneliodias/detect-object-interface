@@ -4,6 +4,8 @@ from werkzeug.utils import secure_filename
 from dataclass import *
 from process_video import *
 from utils import allowed_file
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
 # from postgres.db.insert_user import insert_user_input
 from flask_sqlalchemy import SQLAlchemy
 
@@ -19,23 +21,80 @@ db.init_app(app)
 
 class UserInputs(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    serve_video_name = db.Column(db.String(50), nullable=False)
+    server_video_name = db.Column(db.String(50), nullable=False)
     confidence_input = db.Column(db.DECIMAL(5, 4), nullable=False)
     iou_input = db.Column(db.DECIMAL(5, 4), nullable=False)
 
 
-def save_user_input(video_name, confidence_input, iou_input):
+class Detections(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    frame_number = db.Column(db.Integer, nullable=False)
+    box_left = db.Column(db.Integer, nullable=False)
+    box_top = db.Column(db.Integer, nullable=False)
+    box_width = db.Column(db.Integer, nullable=False)
+    box_height = db.Column(db.Integer, nullable=False)
+    class_name = db.Column(db.String(15), nullable=False)
+    confidence = db.Column(db.DECIMAL(10, 9), nullable=False)
+    user_input_id = db.Column(db.Integer, db.ForeignKey(
+        'user_inputs.id', ondelete='CASCADE'))
+
+
+def save_user_input_in_db(video_name, confidence_input, iou_input):
     try:
         new_input = UserInputs(
-            serve_video_name=video_name,
+            server_video_name=video_name,
             confidence_input=confidence_input,
             iou_input=iou_input
         )
         db.session.add(new_input)
         db.session.commit()
-        return new_input
+        return new_input.id
     except Exception as e:
         print("Erro ao inserir dados:", str(e))
+
+
+def save_detection_to_db(detection: dict, user_input_id):
+    try:
+        new_detection = Detections(
+            frame_number=detection['frame_number'],
+            box_left=detection['box']['left'],
+            box_top=detection['box']['top'],
+            box_width=detection['box']['width'],
+            box_height=detection['box']['height'],
+            class_name=detection['class_name'],
+            confidence=detection['confidence'],
+            user_input_id=user_input_id
+        )
+        db.session.add(new_detection)
+        db.session.commit()
+        return new_detection
+    except Exception as e:
+        print("Erro ao inserir detecções no banco de dados:", str(e))
+
+
+def save_all_detections_in_db(detections: list[dict], user_input_id: int):
+    try:
+        engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        detection_objects = [Detections(
+            frame_number=detection['frame_number'],
+            box_left=detection['box']['left'],
+            box_top=detection['box']['top'],
+            box_width=detection['box']['width'],
+            box_height=detection['box']['height'],
+            class_name=detection['class_name'],
+            confidence=detection['confidence'],
+            user_input_id=user_input_id
+        ) for detection in detections]
+
+        session.bulk_save_objects(detection_objects)
+        session.commit()
+
+    except Exception as e:
+        session.rollback()
+        print("Erro ao inserir detecções no banco de dados:", str(e))
 
 
 @app.route("/upload", methods=['POST'])
@@ -66,12 +125,18 @@ def detect():
     confidence = float(request.json['confidence'])
     iou = float(request.json['iou'])
 
-    ai_identify_objects = VideoProcessor(relative_video_path,
+    detections_list = DetectionsProcess()
+    ai_identify_objects = VideoProcessor(detections_list,
+                                         relative_video_path,
                                          confidence,
                                          iou)
+
     processed_video_path = ai_identify_objects.main_process()
 
-    # save_user_input(processed_video_path, confidence, iou)
+    user_input_id = save_user_input_in_db(
+        processed_video_path, confidence, iou)
+
+    save_all_detections_in_db(detections_list.all_detections, user_input_id)
 
     return jsonify({'message': 'Video processed successfully',
                     'processed_video_path': processed_video_path})
