@@ -47,10 +47,16 @@ class VideoProcessor:
         self.video_props = {}
         self.cap = ''
         self.out = ''
+        self.frame_number = 1
 
     def main_process(self):
-        self.get_video_config()
-        frame_number = 1
+
+        self.create_frames_folder()
+        self.generate_video_filename()
+        self.generate_output_video_path()
+        self.get_video_parameters()
+        self.initialize_video_writer()
+
         all_detections = Detections()
 
         while self.cap.isOpened():
@@ -59,29 +65,19 @@ class VideoProcessor:
                 break
 
             detections = self.detect_object(frame)
-            all_detections.add_frame_to_detections(detections, frame_number)
+            all_detections.add_frame_to_detections(
+                detections, self.frame_number)
 
             frame_with_detection = self.draw_box_and_text(frame, detections)
 
             self.out.write(frame_with_detection)
-            frame_number += 1
+            self.frame_number += 1
 
         self.cap.release()
         self.out.release()
         cv2.destroyAllWindows()
         all_detections.save_detections_in_json()
         return self.output_video_filename
-
-    def get_video_config(self):
-
-        self.create_frames_folder()
-        self.generate_video_filename()
-        self.generate_output_video_path()
-        self.get_video_parameters()
-        self.initialize_video_writer()
-        return
-
-        # return out, cap
 
     def initialize_video_writer(self):
         fourcc = cv2.VideoWriter_fourcc(*'avc1')
