@@ -6,8 +6,8 @@ from process_video import *
 from utils import allowed_file
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-# from postgres.db.insert_user import insert_user_input
 from flask_sqlalchemy import SQLAlchemy
+
 
 app = Flask(__name__)
 cors = CORS(app, origins='*')
@@ -119,9 +119,13 @@ def upload_file():
 def detect():
 
     if 'confidence' not in request.json or 'iou' not in request.json:
-        return jsonify({'status': 400, 'error': 'model parameter is missing.'})
+        return jsonify({'message': 'model parameter is missing.'}), 400
 
     relative_video_path = request.json['video_path']
+
+    if not os.path.exists(relative_video_path):
+        return jsonify({'message': 'File not found.'}), 404
+
     confidence = float(request.json['confidence'])
     iou = float(request.json['iou'])
 
