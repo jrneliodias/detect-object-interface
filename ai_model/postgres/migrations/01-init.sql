@@ -7,13 +7,13 @@ CREATE TABLE IF NOT EXISTS user_inputs (
 
 CREATE TABLE IF NOT EXISTS detections (
     id SERIAL PRIMARY KEY,
-    frame INT NOT NULL,
+    frame_number INT NOT NULL,
     box_left INT NOT NULL,
     box_top INT NOT NULL,
     box_width INT NOT NULL,
     box_height INT NOT NULL,
     class_name VARCHAR(15) NOT NULL,
-    confidence DECIMAL(15, 14) NOT NULL,
+    confidence DECIMAL(10, 9) NOT NULL,
     user_input_id INT,  
 
     FOREIGN KEY (user_input_id) REFERENCES user_inputs(id) ON DELETE CASCADE
