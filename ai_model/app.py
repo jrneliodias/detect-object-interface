@@ -27,7 +27,7 @@ class UserInputs(db.Model):
 def save_user_input(video_name, confidence_input, iou_input):
     try:
         new_input = UserInputs(
-            video_name=video_name,
+            serve_video_name=video_name,
             confidence_input=confidence_input,
             iou_input=iou_input
         )
@@ -66,12 +66,12 @@ def detect():
     confidence = float(request.json['confidence'])
     iou = float(request.json['iou'])
 
-    processed_video_path = video_processor(
-        relative_video_path,
-        confidence,
-        iou)
+    ai_identify_objects = VideoProcessor(relative_video_path,
+                                         confidence,
+                                         iou)
+    processed_video_path = ai_identify_objects.main_process()
 
-    save_user_input(processed_video_path, confidence, iou)
+    # save_user_input(processed_video_path, confidence, iou)
 
     return jsonify({'message': 'Video processed successfully',
                     'processed_video_path': processed_video_path})
