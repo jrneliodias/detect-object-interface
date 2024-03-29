@@ -6,8 +6,8 @@ CREATE TABLE IF NOT EXISTS user_inputs (
 );
 
 CREATE TABLE IF NOT EXISTS detections (
-    id INT PRIMARY KEY,
-    frame VARCHAR(15) NOT NULL,
+    id SERIAL PRIMARY KEY,
+    frame INT NOT NULL,
     box_left INT NOT NULL,
     box_top INT NOT NULL,
     box_width INT NOT NULL,
