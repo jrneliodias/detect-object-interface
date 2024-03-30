@@ -7,11 +7,24 @@ import VideoPlayer from './components/videoplayer'
 import DetectTable from './components/detect-table'
 import { SkeletonVideo } from './components/skeleton-video'
 
+export type Detection = {
+  id: number
+  frame_number: number
+  box_left: number
+  box_top: number
+  box_width: number
+  box_height: number
+  class_name: string
+  confidence: number
+  user_input_id: number
+}
+
 function App() {
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [videoURL, setVideoURL] = useState<string | undefined>(undefined);
   const [outputVideo, setOutputVideo] = useState<string | null>(null);
   const [inProcess, setInProcess] = useState<boolean>(false)
+  const [lastDetections, setLastDetections] = useState<Detection[] | null>([])
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -22,6 +35,10 @@ function App() {
     }
   }
 
+  const handleLastDetections = (detections: Detection[] | null) => {
+    setLastDetections(detections)
+
+  };
   const handleVideoProcessed = (inProcess: boolean) => {
     setInProcess(inProcess)
 
@@ -44,6 +61,7 @@ function App() {
         onUpload={handleUpload}
         onVideoProcessed={handleVideoProcessed}
         onVideoOutput={handleVideoOutput}
+        onLastDetections={handleLastDetections}
         inProcess={inProcess} />
 
       <div className="flex gap-5 justify-evenly">
@@ -52,7 +70,7 @@ function App() {
         {outputVideo && !inProcess && <VideoPlayer videoPath={outputVideo} />}
       </div>
 
-      <DetectTable />
+      <DetectTable lastDetections={lastDetections} />
 
 
     </main>
