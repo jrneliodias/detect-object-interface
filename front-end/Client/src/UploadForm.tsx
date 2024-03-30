@@ -5,7 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
-import { Detection, detectObjects, getVideoService, uploadFile } from "./services/apiService";
+import { Detection, detectObjects, getProcessedVideo, uploadFile } from "./services/apiService";
 
 
 interface UploadFileProps {
@@ -44,35 +44,7 @@ const UploadForm = ({ videoFile,
         console.log(iouValue)
     }
 
-    const getProcessedVideo = async (processed_video_name: string) => {
 
-        try {
-
-            const getProcessVideoResponse = await getVideoService(processed_video_name)
-            // const getProcessVideoResponse = await axios.get(`http://localhost:8080/get-video/${processed_video_path}`, {
-            //     headers: {
-            //         Accept: 'video/mp4;charset=UTF-8'
-            //     },
-            //     responseType: 'blob'
-            // })
-            if (!(getProcessVideoResponse.data instanceof Blob)) {
-                throw new Error('Response data is not of type Blob');
-            }
-
-            const videoBlobURL = URL.createObjectURL(new Blob([getProcessVideoResponse.data], { type: "video/mp4" }));
-
-
-            onVideoOutput(videoBlobURL)
-
-
-
-        } catch (error) {
-            onVideoProcessed(false)
-            toast.error("Error getting the video:" + error)
-            throw error
-
-        }
-    }
     const getLastDetections = async () => {
 
         try {
@@ -102,12 +74,14 @@ const UploadForm = ({ videoFile,
             if (!uploadedVideoPath) return
             const processedVideoPath = await detectObjects(uploadedVideoPath, confidence, iou)
             if (!processedVideoPath) return
-            await getProcessedVideo(processedVideoPath)
+            const videoBlobURL = await getProcessedVideo(processedVideoPath)
+            onVideoOutput(videoBlobURL);
             await getLastDetections()
             onVideoProcessed(false)
 
         } catch (error) {
-            console.error('Error fetching video:', error);
+            onVideoProcessed(false)
+            toast.error('Error fetching video: ' + error);
 
         }
     }

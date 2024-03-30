@@ -31,8 +31,6 @@ export type Detection = {
   user_input_id: number;
 };
 
-// type OnVideoProcessedFunction = (inProcess: boolean) => void;
-
 export const uploadFileService = async (formData: FormData): Promise<ApiData> => {
   try {
     const uploadResponse = await apiService.post("/upload", formData);
@@ -78,16 +76,28 @@ export const uploadFile = async (videoFile: File | null, confidence: number, iou
 };
 
 export const detectObjects = async (video_path: string, confidence: number, iou: number) => {
+  if (!confidence || !iou) return;
+
+  const processVideoResponse = await detectObjectsService(video_path, iou.toString(), confidence.toString());
+  const processed_video_path = processVideoResponse.data.processed_video_path;
+
+  toast.success(processVideoResponse.data.message);
+  return processed_video_path;
+};
+
+export const getProcessedVideo = async (processed_video_name: string) => {
   try {
-    if (!confidence || !iou) return;
+    const getProcessVideoResponse = await getVideoService(processed_video_name);
 
-    const processVideoResponse = await detectObjectsService(video_path, iou.toString(), confidence.toString());
-    const processed_video_path = processVideoResponse.data.processed_video_path;
+    if (!(getProcessVideoResponse.data instanceof Blob)) {
+      throw new Error("Response data is not of type Blob");
+    }
 
-    toast.success(processVideoResponse.data.message);
-    return processed_video_path;
+    const videoBlobURL = URL.createObjectURL(new Blob([getProcessVideoResponse.data], { type: "video/mp4" }));
+
+    return videoBlobURL;
   } catch (error) {
-    toast.error("Error processing the video:" + error);
+    toast.error("Error getting the video:" + error);
     throw error;
   }
 };
