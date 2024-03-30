@@ -5,7 +5,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
-import { Detection } from "./App";
+import { Detection } from "./services/apiService";
+import { uploadFileService } from "./services/apiService";
 
 
 interface UploadFileProps {
@@ -28,20 +29,20 @@ const UploadForm = ({ videoFile,
     inProcess }: UploadFileProps) => {
 
 
-    const [confidence, setConfidence] = useState<number | undefined>(0.7)
-    const [iou, setIOU] = useState<number | undefined>(0.5)
+    const [confidence, setConfidence] = useState<number>(0.7)
+    const [iou, setIOU] = useState<number>(0.5)
 
 
     const handleConfidenceChange = (event: ChangeEvent<HTMLInputElement>) => {
         const confidenceValue = parseFloat(event.target.value)
-        if (isNaN(confidenceValue)) return
+        if (isNaN(confidenceValue) || confidenceValue < 0 || confidenceValue > 1) return
         setConfidence(confidenceValue)
         console.log(confidenceValue)
     }
 
     const handleIOUChange = (event: ChangeEvent<HTMLInputElement>) => {
         const iouValue = parseFloat(event.target.value)
-        if (isNaN(iouValue)) return
+        if (isNaN(iouValue) || iouValue < 0 || iouValue > 1) return
         setIOU(iouValue)
         console.log(iouValue)
     }
@@ -54,11 +55,12 @@ const UploadForm = ({ videoFile,
             const formData = new FormData();
             formData.append('video', videoFile)
 
+            const uploadResponse = await uploadFileService(formData)
             onUpload()
-            const uploadResponse = await axios.post('http://localhost:8080/upload', formData)
+            // const uploadResponse = await axios.post('http://localhost:8080/upload', formData)
 
-            toast.success(uploadResponse.data.message)
-            const video_path = uploadResponse.data.video_path
+            toast.success(uploadResponse.message)
+            const video_path = uploadResponse.video_path
             return video_path
 
 
@@ -149,6 +151,7 @@ const UploadForm = ({ videoFile,
             if (!videoFile) return
 
             const uploadedVideoPath = await uploadFile()
+            if (!uploadedVideoPath) return
             const processedVideoPath = await detectObjects(uploadedVideoPath)
             await getProcessedVideo(processedVideoPath)
             await getLastDetections()
