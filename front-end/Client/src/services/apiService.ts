@@ -31,8 +31,6 @@ export type Detection = {
   user_input_id: number;
 };
 
-type onVideoProcessed = (inProcess: boolean) => void;
-
 // type OnVideoProcessedFunction = (inProcess: boolean) => void;
 
 export const uploadFileService = async (formData: FormData): Promise<ApiData> => {
@@ -49,9 +47,17 @@ export const detectObjectsService = async (videoPath: string, iou: string, confi
   return await apiService.post("/detect", { video_path: videoPath, iou, confidence });
 };
 
-export const uploadFile = async (onVideoProcessed: onVideoProcessed, videoFile: File | null, confidence: number, iou: number) => {
+export const getVideoService = async (videoFileName: string): Promise<ApiResponse> => {
+  return await apiService.get(`/result/${videoFileName}`, {
+    headers: {
+      Accept: "video/mp4;charset=UTF-8",
+    },
+    responseType: "blob",
+  });
+};
+
+export const uploadFile = async (videoFile: File | null, confidence: number, iou: number) => {
   try {
-    onVideoProcessed(true);
     if (!videoFile || !confidence || !iou) return;
     const formData = new FormData();
     formData.append("video", videoFile);
@@ -62,12 +68,26 @@ export const uploadFile = async (onVideoProcessed: onVideoProcessed, videoFile: 
     const video_path = uploadResponse.video_path;
     return video_path;
   } catch (error) {
-    onVideoProcessed(false);
     if (axios.isAxiosError(error) && error.response) {
       toast.error("Error uploading file:" + error.response.data.message);
     } else {
       toast.error("Error uploading file: " + (error as Error).message);
     }
+    throw error;
+  }
+};
+
+export const detectObjects = async (video_path: string, confidence: number, iou: number) => {
+  try {
+    if (!confidence || !iou) return;
+
+    const processVideoResponse = await detectObjectsService(video_path, iou.toString(), confidence.toString());
+    const processed_video_path = processVideoResponse.data.processed_video_path;
+
+    toast.success(processVideoResponse.data.message);
+    return processed_video_path;
+  } catch (error) {
+    toast.error("Error processing the video:" + error);
     throw error;
   }
 };
