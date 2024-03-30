@@ -57,7 +57,7 @@ const UploadForm = ({ videoFile,
 
             const uploadResponse = await uploadFileService(formData)
             onUpload()
-            // const uploadResponse = await axios.post('http://localhost:8080/upload', formData)
+
 
             toast.success(uploadResponse.message)
             const video_path = uploadResponse.video_path
@@ -66,7 +66,11 @@ const UploadForm = ({ videoFile,
 
         } catch (error) {
             onVideoProcessed(false)
-            toast.error("Error uploading file:" + error)
+            if (axios.isAxiosError(error) && error.response) {
+                toast.error("Error uploading file:" + error.response.data.message)
+            } else {
+                toast.error("Error uploading file: " + (error as Error).message);
+            }
             throw error
 
         }
