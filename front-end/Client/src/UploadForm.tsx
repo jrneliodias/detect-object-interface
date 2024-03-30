@@ -5,14 +5,12 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
-import { Detection } from "./services/apiService";
-import { uploadFileService } from "./services/apiService";
+import { Detection, uploadFile } from "./services/apiService";
 
 
 interface UploadFileProps {
     videoFile: File | null
     onFileChange: (event: ChangeEvent<HTMLInputElement>) => void
-    onUpload: () => void
     onVideoProcessed: (inProcess: boolean) => void
     onVideoOutput: (video: string) => void
     onLastDetections: (detections: Detection[] | null) => void
@@ -22,7 +20,6 @@ interface UploadFileProps {
 
 const UploadForm = ({ videoFile,
     onFileChange,
-    onUpload,
     onVideoProcessed,
     onVideoOutput,
     onLastDetections,
@@ -47,34 +44,6 @@ const UploadForm = ({ videoFile,
         console.log(iouValue)
     }
 
-    const uploadFile = async () => {
-
-        try {
-            onVideoProcessed(true)
-            if (!videoFile || !confidence || !iou) return
-            const formData = new FormData();
-            formData.append('video', videoFile)
-
-            const uploadResponse = await uploadFileService(formData)
-            onUpload()
-
-
-            toast.success(uploadResponse.message)
-            const video_path = uploadResponse.video_path
-            return video_path
-
-
-        } catch (error) {
-            onVideoProcessed(false)
-            if (axios.isAxiosError(error) && error.response) {
-                toast.error("Error uploading file:" + error.response.data.message)
-            } else {
-                toast.error("Error uploading file: " + (error as Error).message);
-            }
-            throw error
-
-        }
-    }
 
     const detectObjects = async (video_path: string) => {
 
@@ -134,7 +103,6 @@ const UploadForm = ({ videoFile,
 
             const getLastDeteectionsResponse = await axios.get(`http://localhost:8080/get-detections`)
 
-            console.log(getLastDeteectionsResponse.data)
             toast.success('success in get the video')
 
             onVideoProcessed(false)
@@ -154,7 +122,7 @@ const UploadForm = ({ videoFile,
         try {
             if (!videoFile) return
 
-            const uploadedVideoPath = await uploadFile()
+            const uploadedVideoPath = await uploadFile(onVideoProcessed, videoFile, confidence, iou)
             if (!uploadedVideoPath) return
             const processedVideoPath = await detectObjects(uploadedVideoPath)
             await getProcessedVideo(processedVideoPath)

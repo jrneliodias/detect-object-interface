@@ -1,4 +1,5 @@
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -30,12 +31,39 @@ export type Detection = {
   user_input_id: number;
 };
 
+type onVideoProcessed = (inProcess: boolean) => void;
+
+// type OnVideoProcessedFunction = (inProcess: boolean) => void;
+
 export const uploadFileService = async (formData: FormData): Promise<ApiData> => {
   try {
     const uploadResponse = await apiService.post("/upload", formData);
     return uploadResponse.data;
   } catch (error) {
     console.error("Erro ao fazer upload do arquivo:", error);
+    throw error;
+  }
+};
+
+export const uploadFile = async (onVideoProcessed: onVideoProcessed, videoFile: File | null, confidence: number, iou: number) => {
+  try {
+    onVideoProcessed(true);
+    if (!videoFile || !confidence || !iou) return;
+    const formData = new FormData();
+    formData.append("video", videoFile);
+
+    const uploadResponse = await uploadFileService(formData);
+
+    toast.success(uploadResponse.message);
+    const video_path = uploadResponse.video_path;
+    return video_path;
+  } catch (error) {
+    onVideoProcessed(false);
+    if (axios.isAxiosError(error) && error.response) {
+      toast.error("Error uploading file:" + error.response.data.message);
+    } else {
+      toast.error("Error uploading file: " + (error as Error).message);
+    }
     throw error;
   }
 };
