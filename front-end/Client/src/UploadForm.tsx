@@ -4,7 +4,9 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
-import { Label } from "@radix-ui/react-label";
+import { Label } from "./components/ui/label";
+import { Detection } from "./App";
+
 
 interface UploadFileProps {
     videoFile: File | null
@@ -12,6 +14,7 @@ interface UploadFileProps {
     onUpload: () => void
     onVideoProcessed: (inProcess: boolean) => void
     onVideoOutput: (video: string) => void
+    onLastDetections: (detections: Detection[] | null) => void
     inProcess: boolean
 
 }
@@ -21,6 +24,7 @@ const UploadForm = ({ videoFile,
     onUpload,
     onVideoProcessed,
     onVideoOutput,
+    onLastDetections,
     inProcess }: UploadFileProps) => {
 
 
@@ -105,11 +109,32 @@ const UploadForm = ({ videoFile,
             }
 
             const videoBlobURL = URL.createObjectURL(new Blob([getProcessVideoResponse.data], { type: "video/mp4" }));
-            toast.success('success in get the video')
+
 
             onVideoOutput(videoBlobURL)
-            onVideoProcessed(false)
 
+
+
+        } catch (error) {
+            onVideoProcessed(false)
+            toast.error("Error getting the video:" + error)
+            throw error
+
+        }
+    }
+    const getLastDetections = async () => {
+
+        try {
+
+            const getLastDeteectionsResponse = await axios.get(`http://localhost:8080/get-detections`)
+
+            console.log(getLastDeteectionsResponse.data)
+            toast.success('success in get the video')
+
+            onVideoProcessed(false)
+            if (getLastDeteectionsResponse.data) {
+                onLastDetections(getLastDeteectionsResponse.data)
+            }
 
         } catch (error) {
             onVideoProcessed(false)
@@ -126,6 +151,7 @@ const UploadForm = ({ videoFile,
             const uploadedVideoPath = await uploadFile()
             const processedVideoPath = await detectObjects(uploadedVideoPath)
             await getProcessedVideo(processedVideoPath)
+            await getLastDetections()
 
         } catch (error) {
             console.error('Error fetching video:', error);
