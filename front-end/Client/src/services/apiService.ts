@@ -13,11 +13,11 @@ interface ApiData {
   processed_video_path: string;
 }
 
-// interface ApiResponse {
-//   message: string;
-//   status: number;
-//   data: ApiData;
-// }
+interface ApiResponse {
+  message: string;
+  status: number;
+  data: ApiData;
+}
 
 export type Detection = {
   id: number;
@@ -43,6 +43,10 @@ export const uploadFileService = async (formData: FormData): Promise<ApiData> =>
     console.error("Erro ao fazer upload do arquivo:", error);
     throw error;
   }
+};
+
+export const detectObjectsService = async (videoPath: string, iou: string, confidence: string): Promise<ApiResponse> => {
+  return await apiService.post("/detect", { video_path: videoPath, iou, confidence });
 };
 
 export const uploadFile = async (onVideoProcessed: onVideoProcessed, videoFile: File | null, confidence: number, iou: number) => {
