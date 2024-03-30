@@ -5,7 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
-import { Detection, detectObjectsService, uploadFile } from "./services/apiService";
+import { Detection, detectObjects, getVideoService, uploadFile } from "./services/apiService";
 
 
 interface UploadFileProps {
@@ -44,46 +44,17 @@ const UploadForm = ({ videoFile,
         console.log(iouValue)
     }
 
-
-    const detectObjects = async (video_path: string) => {
+    const getProcessedVideo = async (processed_video_name: string) => {
 
         try {
-            if (!confidence || !iou) return
 
-            const processVideoResponse = await detectObjectsService(
-                video_path,
-                iou.toString(),
-                confidence.toString()
-            )
-            // const processVideoResponse = await axios.post('http://localhost:8080/detect', {
-            //     video_path: video_path,
-            //     iou: iou.toString(),
-            //     confidence: confidence.toString()
+            const getProcessVideoResponse = await getVideoService(processed_video_name)
+            // const getProcessVideoResponse = await axios.get(`http://localhost:8080/get-video/${processed_video_path}`, {
+            //     headers: {
+            //         Accept: 'video/mp4;charset=UTF-8'
+            //     },
+            //     responseType: 'blob'
             // })
-            const processed_video_path = processVideoResponse.data.processed_video_path
-
-            toast.success(processVideoResponse.data.message)
-            return processed_video_path
-
-
-
-        } catch (error) {
-            onVideoProcessed(false)
-            toast.error("Error processing the video:" + error)
-            throw error
-
-        }
-    }
-    const getProcessedVideo = async (processed_video_path: string) => {
-
-        try {
-
-            const getProcessVideoResponse = await axios.get(`http://localhost:8080/get-video/${processed_video_path}`, {
-                headers: {
-                    Accept: 'video/mp4;charset=UTF-8'
-                },
-                responseType: 'blob'
-            })
             if (!(getProcessVideoResponse.data instanceof Blob)) {
                 throw new Error('Response data is not of type Blob');
             }
@@ -106,7 +77,7 @@ const UploadForm = ({ videoFile,
 
         try {
 
-            const getLastDeteectionsResponse = await axios.get(`http://localhost:8080/get-detections`)
+            const getLastDeteectionsResponse = await axios.get(`http://localhost:8080/detections`)
 
             toast.success('success in get the video')
 
@@ -126,13 +97,14 @@ const UploadForm = ({ videoFile,
     const handleUpload = async () => {
         try {
             if (!videoFile) return
-
-            const uploadedVideoPath = await uploadFile(onVideoProcessed, videoFile, confidence, iou)
+            onVideoProcessed(true)
+            const uploadedVideoPath = await uploadFile(videoFile, confidence, iou)
             if (!uploadedVideoPath) return
-            const processedVideoPath = await detectObjects(uploadedVideoPath)
+            const processedVideoPath = await detectObjects(uploadedVideoPath, confidence, iou)
             if (!processedVideoPath) return
             await getProcessedVideo(processedVideoPath)
             await getLastDetections()
+            onVideoProcessed(false)
 
         } catch (error) {
             console.error('Error fetching video:', error);
