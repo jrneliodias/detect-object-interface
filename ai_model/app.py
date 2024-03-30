@@ -152,11 +152,31 @@ def get_video(name):
     directory = 'output-videos'
     current_directory = os.getcwd()
     video_path = os.path.join(current_directory, directory)
+    get_last_detections()
 
     if not video_path:
         abort(404)
 
     return send_from_directory(video_path, name, as_attachment=True)
+
+
+@app.route("/get-detections", methods=['GET'])
+def get_last_detections():
+    last_10_detections = Detections.query.order_by(
+        Detections.id.desc()).limit(10).all()
+    json_data = [{
+        'id': detection.id,
+        'frame_number': detection.frame_number,
+        'box_left': detection.box_left,
+        'box_top': detection.box_top,
+        'box_width': detection.box_width,
+        'box_height': detection.box_height,
+        'class_name': detection.class_name,
+        'confidence': float(detection.confidence),  # Converta para float
+        'user_input_id': detection.user_input_id
+    } for detection in last_10_detections]
+
+    return jsonify(json_data)
 
 
 @app.route('/health_check', methods=['GET'])
