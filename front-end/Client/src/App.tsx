@@ -33,11 +33,7 @@ function App() {
     setInProcess(inProcess)
 
   };
-  const handleUpload = () => {
-    if (!videoFile) return;
 
-
-  };
 
   const handleVideoOutput = (videoURL: string) => {
     setOutputVideo(videoURL)
@@ -48,7 +44,6 @@ function App() {
 
       <UploadForm videoFile={videoFile}
         onFileChange={handleFileChange}
-        onUpload={handleUpload}
         onVideoProcessed={handleVideoProcessed}
         onVideoOutput={handleVideoOutput}
         onLastDetections={handleLastDetections}
