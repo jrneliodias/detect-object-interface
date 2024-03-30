@@ -1,36 +1,54 @@
-import { useEffect, useState } from "react";
-import { Payment, columns } from "./ui/table/columns"
-import { DataTable } from "./ui/table/data-table"
+import { useEffect } from "react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
+import { Detection } from "@/App";
 
-async function getData(): Promise<Payment[]> {
-    // Fetch data from your API here.
-    return [
-        {
-            id: "728ed52f",
-            amount: 100,
-            status: "pending",
-            email: "m@example.com",
-        },
-        // ...
-    ]
+type DetectTableProps = {
+
+    lastDetections: Detection[] | null
 }
 
-export default function DetectTable() {
-    const [data, setData] = useState<Payment[]>([]);
+export default function DetectTable({ lastDetections }: DetectTableProps) {
 
     useEffect(() => {
-        async function fetchData() {
-            const fetchedData = await getData()
-            setData(fetchedData)
 
-        }
 
-        fetchData()
+
     }, [])
 
     return (
-        <div className="container mx-auto py-10">
-            <DataTable columns={columns} data={data} />
+        <div className="container">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+
+                        <TableHead>Frame Number</TableHead>
+                        <TableHead>Box Left</TableHead>
+                        <TableHead>Box Top</TableHead>
+                        <TableHead>Box Width</TableHead>
+                        <TableHead>Box Height</TableHead>
+                        <TableHead>Class Name</TableHead>
+                        <TableHead>Confidence</TableHead>
+                        <TableHead>User Input Id</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+
+
+                    {lastDetections && (lastDetections.map((detection) => (
+                        <TableRow key={detection.id}>
+
+                            <TableCell>{detection.frame_number}</TableCell>
+                            <TableCell>{detection.box_left}</TableCell>
+                            <TableCell>{detection.box_top}</TableCell>
+                            <TableCell>{detection.box_width}</TableCell>
+                            <TableCell>{detection.box_height}</TableCell>
+                            <TableCell>{detection.class_name}</TableCell>
+                            <TableCell>{detection.confidence}</TableCell>
+                            <TableCell>{detection.user_input_id}</TableCell>
+                        </TableRow>
+                    )))}
+                </TableBody>
+            </Table>
         </div>
     )
 }
