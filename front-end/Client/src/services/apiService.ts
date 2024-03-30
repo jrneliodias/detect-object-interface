@@ -55,24 +55,15 @@ export const getVideoService = async (videoFileName: string): Promise<ApiRespons
 };
 
 export const uploadFile = async (videoFile: File | null, confidence: number, iou: number) => {
-  try {
-    if (!videoFile || !confidence || !iou) return;
-    const formData = new FormData();
-    formData.append("video", videoFile);
+  if (!videoFile || !confidence || !iou) return;
+  const formData = new FormData();
+  formData.append("video", videoFile);
 
-    const uploadResponse = await uploadFileService(formData);
+  const uploadResponse = await uploadFileService(formData);
 
-    toast.success(uploadResponse.message);
-    const video_path = uploadResponse.video_path;
-    return video_path;
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response) {
-      toast.error("Error uploading file:" + error.response.data.message);
-    } else {
-      toast.error("Error uploading file: " + (error as Error).message);
-    }
-    throw error;
-  }
+  toast.success(uploadResponse.message);
+  const video_path = uploadResponse.video_path;
+  return video_path;
 };
 
 export const detectObjects = async (video_path: string, confidence: number, iou: number) => {
@@ -86,18 +77,13 @@ export const detectObjects = async (video_path: string, confidence: number, iou:
 };
 
 export const getProcessedVideo = async (processed_video_name: string) => {
-  try {
-    const getProcessVideoResponse = await getVideoService(processed_video_name);
+  const getProcessVideoResponse = await getVideoService(processed_video_name);
 
-    if (!(getProcessVideoResponse.data instanceof Blob)) {
-      throw new Error("Response data is not of type Blob");
-    }
-
-    const videoBlobURL = URL.createObjectURL(new Blob([getProcessVideoResponse.data], { type: "video/mp4" }));
-
-    return videoBlobURL;
-  } catch (error) {
-    toast.error("Error getting the video:" + error);
-    throw error;
+  if (!(getProcessVideoResponse.data instanceof Blob)) {
+    throw new Error("Response data is not of type Blob");
   }
+
+  const videoBlobURL = URL.createObjectURL(new Blob([getProcessVideoResponse.data], { type: "video/mp4" }));
+
+  return videoBlobURL;
 };

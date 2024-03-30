@@ -81,7 +81,12 @@ const UploadForm = ({ videoFile,
 
         } catch (error) {
             onVideoProcessed(false)
-            toast.error('Error fetching video: ' + error);
+            if (axios.isAxiosError(error) && error.response) {
+                toast.error("Error uploading file:" + error.response.data.message);
+            } else {
+                toast.error("Error uploading file: " + (error as Error).message);
+            }
+            throw error;
 
         }
     }
