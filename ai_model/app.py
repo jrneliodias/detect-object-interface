@@ -160,7 +160,7 @@ def get_video(name):
     return send_from_directory(video_path, name, as_attachment=True)
 
 
-@app.route("/get-detections", methods=['GET'])
+@app.route("/detections", methods=['GET'])
 def get_last_detections():
     last_10_detections = Detections.query.order_by(
         Detections.id.desc()).limit(10).all()

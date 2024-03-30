@@ -5,13 +5,14 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
-import { Detection } from "./App";
+import { Detection, getLastDetections } from "./services/apiService";
+import { detectObjectsService, getVideoService, uploadFileService } from "./services/apiService";
 
 
 interface UploadFileProps {
     videoFile: File | null
     onFileChange: (event: ChangeEvent<HTMLInputElement>) => void
-    onUpload: () => void
+
     onVideoProcessed: (inProcess: boolean) => void
     onVideoOutput: (video: string) => void
     onLastDetections: (detections: Detection[] | null) => void
@@ -21,27 +22,27 @@ interface UploadFileProps {
 
 const UploadForm = ({ videoFile,
     onFileChange,
-    onUpload,
+
     onVideoProcessed,
     onVideoOutput,
     onLastDetections,
     inProcess }: UploadFileProps) => {
 
 
-    const [confidence, setConfidence] = useState<number | undefined>(0.7)
-    const [iou, setIOU] = useState<number | undefined>(0.5)
+    const [confidence, setConfidence] = useState<number>(0.7)
+    const [iou, setIOU] = useState<number>(0.5)
 
 
     const handleConfidenceChange = (event: ChangeEvent<HTMLInputElement>) => {
         const confidenceValue = parseFloat(event.target.value)
-        if (isNaN(confidenceValue)) return
+        if (isNaN(confidenceValue) || confidenceValue < 0 || confidenceValue > 1) return
         setConfidence(confidenceValue)
         console.log(confidenceValue)
     }
 
     const handleIOUChange = (event: ChangeEvent<HTMLInputElement>) => {
         const iouValue = parseFloat(event.target.value)
-        if (isNaN(iouValue)) return
+        if (isNaN(iouValue) || iouValue < 0 || iouValue > 1) return
         setIOU(iouValue)
         console.log(iouValue)
     }
@@ -54,17 +55,26 @@ const UploadForm = ({ videoFile,
             const formData = new FormData();
             formData.append('video', videoFile)
 
-            onUpload()
-            const uploadResponse = await axios.post('http://localhost:8080/upload', formData)
+
+            const uploadResponse = await uploadFileService(formData)
+
+            if (!uploadResponse.data) {
+                throw new Error("Response data doesn't have a valid video path");
+            }
+            const video_path = uploadResponse.data.video_path
 
             toast.success(uploadResponse.data.message)
-            const video_path = uploadResponse.data.video_path
             return video_path
 
 
         } catch (error) {
             onVideoProcessed(false)
-            toast.error("Error uploading file:" + error)
+
+            if (axios.isAxiosError(error) && error.response) {
+                toast.error("Error uploading file:" + error.response.data.message)
+            } else {
+                toast.error("Error uploading file: " + (error as Error).message);
+            }
             throw error
 
         }
@@ -75,21 +85,24 @@ const UploadForm = ({ videoFile,
         try {
             if (!confidence || !iou) return
 
-            const processVideoResponse = await axios.post('http://localhost:8080/detect', {
-                video_path: video_path,
-                iou: iou.toString(),
-                confidence: confidence.toString()
-            })
-            const processed_video_path = processVideoResponse.data.processed_video_path
+            const processVideoResponse = await detectObjectsService(
+                video_path,
+                iou.toString(),
+                confidence.toString()
+            )
 
+
+            const processed_video_path = processVideoResponse.data.processed_video_path
             toast.success(processVideoResponse.data.message)
             return processed_video_path
 
-
-
         } catch (error) {
             onVideoProcessed(false)
-            toast.error("Error processing the video:" + error)
+            if (axios.isAxiosError(error) && error.response) {
+                toast.error("Error in detect objects:" + error.response.data.message)
+            } else {
+                toast.error("Error in detect objects:" + (error as Error).message);
+            }
             throw error
 
         }
@@ -98,12 +111,8 @@ const UploadForm = ({ videoFile,
 
         try {
 
-            const getProcessVideoResponse = await axios.get(`http://localhost:8080/get-video/${processed_video_path}`, {
-                headers: {
-                    Accept: 'video/mp4;charset=UTF-8'
-                },
-                responseType: 'blob'
-            })
+            const getProcessVideoResponse = await getVideoService(processed_video_path)
+
             if (!(getProcessVideoResponse.data instanceof Blob)) {
                 throw new Error('Response data is not of type Blob');
             }
@@ -117,28 +126,12 @@ const UploadForm = ({ videoFile,
 
         } catch (error) {
             onVideoProcessed(false)
-            toast.error("Error getting the video:" + error)
-            throw error
 
-        }
-    }
-    const getLastDetections = async () => {
-
-        try {
-
-            const getLastDeteectionsResponse = await axios.get(`http://localhost:8080/get-detections`)
-
-            console.log(getLastDeteectionsResponse.data)
-            toast.success('success in get the video')
-
-            onVideoProcessed(false)
-            if (getLastDeteectionsResponse.data) {
-                onLastDetections(getLastDeteectionsResponse.data)
+            if (axios.isAxiosError(error) && error.response) {
+                toast.error("Error in get the video:" + error.response.data.message)
+            } else {
+                toast.error("Error in get the video: " + (error as Error).message);
             }
-
-        } catch (error) {
-            onVideoProcessed(false)
-            toast.error("Error getting the video:" + error)
             throw error
 
         }
@@ -149,9 +142,11 @@ const UploadForm = ({ videoFile,
             if (!videoFile) return
 
             const uploadedVideoPath = await uploadFile()
+            if (!uploadedVideoPath) return
             const processedVideoPath = await detectObjects(uploadedVideoPath)
+            if (!processedVideoPath) return
             await getProcessedVideo(processedVideoPath)
-            await getLastDetections()
+            await getLastDetections(onLastDetections, onVideoProcessed)
 
         } catch (error) {
             console.error('Error fetching video:', error);

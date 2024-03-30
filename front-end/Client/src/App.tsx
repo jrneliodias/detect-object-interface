@@ -6,18 +6,9 @@ import UploadForm from './UploadForm'
 import VideoPlayer from './components/videoplayer'
 import DetectTable from './components/detect-table'
 import { SkeletonVideo } from './components/skeleton-video'
+import { Detection } from './services/apiService'
 
-export type Detection = {
-  id: number
-  frame_number: number
-  box_left: number
-  box_top: number
-  box_width: number
-  box_height: number
-  class_name: string
-  confidence: number
-  user_input_id: number
-}
+
 
 function App() {
   const [videoFile, setVideoFile] = useState<File | null>(null)
@@ -43,11 +34,7 @@ function App() {
     setInProcess(inProcess)
 
   };
-  const handleUpload = () => {
-    if (!videoFile) return;
 
-
-  };
 
   const handleVideoOutput = (videoURL: string) => {
     setOutputVideo(videoURL)
@@ -58,7 +45,7 @@ function App() {
 
       <UploadForm videoFile={videoFile}
         onFileChange={handleFileChange}
-        onUpload={handleUpload}
+
         onVideoProcessed={handleVideoProcessed}
         onVideoOutput={handleVideoOutput}
         onLastDetections={handleLastDetections}
