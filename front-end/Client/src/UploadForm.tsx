@@ -5,7 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
-import { Detection, uploadFile } from "./services/apiService";
+import { Detection, detectObjectsService, uploadFile } from "./services/apiService";
 
 
 interface UploadFileProps {
@@ -50,11 +50,16 @@ const UploadForm = ({ videoFile,
         try {
             if (!confidence || !iou) return
 
-            const processVideoResponse = await axios.post('http://localhost:8080/detect', {
-                video_path: video_path,
-                iou: iou.toString(),
-                confidence: confidence.toString()
-            })
+            const processVideoResponse = await detectObjectsService(
+                video_path,
+                iou.toString(),
+                confidence.toString()
+            )
+            // const processVideoResponse = await axios.post('http://localhost:8080/detect', {
+            //     video_path: video_path,
+            //     iou: iou.toString(),
+            //     confidence: confidence.toString()
+            // })
             const processed_video_path = processVideoResponse.data.processed_video_path
 
             toast.success(processVideoResponse.data.message)
@@ -125,6 +130,7 @@ const UploadForm = ({ videoFile,
             const uploadedVideoPath = await uploadFile(onVideoProcessed, videoFile, confidence, iou)
             if (!uploadedVideoPath) return
             const processedVideoPath = await detectObjects(uploadedVideoPath)
+            if (!processedVideoPath) return
             await getProcessedVideo(processedVideoPath)
             await getLastDetections()
 
