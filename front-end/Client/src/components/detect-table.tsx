@@ -28,7 +28,6 @@ export default function DetectTable({ lastDetections }: DetectTableProps) {
                         <TableHead>Box Height</TableHead>
                         <TableHead>Class Name</TableHead>
                         <TableHead>Confidence</TableHead>
-                        <TableHead>User Input Id</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -44,7 +43,6 @@ export default function DetectTable({ lastDetections }: DetectTableProps) {
                             <TableCell>{detection.box_height}</TableCell>
                             <TableCell>{detection.class_name}</TableCell>
                             <TableCell>{detection.confidence}</TableCell>
-                            <TableCell>{detection.user_input_id}</TableCell>
                         </TableRow>
                     )))}
                 </TableBody>
