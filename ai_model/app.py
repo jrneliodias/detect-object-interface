@@ -13,6 +13,7 @@ app = Flask(__name__)
 cors = CORS(app, origins='*')
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['INPUT_VIDEOS'] = './test-inputs/'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres2024@localhost/ai-detection'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy()
@@ -100,19 +101,18 @@ def save_all_detections_in_db(detections: list[dict], user_input_id: int):
 @app.route("/upload", methods=['POST'])
 def upload_file():
     if 'video' not in request.files:
-        return jsonify({'error': 'no file part'})
+        return jsonify({'error': 'no video file'}), 404
 
     video_file = request.files['video']
-    allowed_file(video_file.filename)
 
-    if video_file.filename == '':
-        return jsonify({'error': 'No selected file'})
-    if video_file:
-        secured_filename = secure_filename(video_file.filename)
-        video_path = './test/' + secured_filename
-        video_file.save(video_path)
+    if not video_file or not allowed_file(video_file.filename):
+        return jsonify({'message': 'Unsupported file provided.'}), 415
 
-        return jsonify({'message': 'Video saved successfully', 'video_path': video_path})
+    secured_filename = secure_filename(video_file.filename)
+    video_path = app.config['INPUT_VIDEOS'] + secured_filename
+    video_file.save(video_path)
+
+    return jsonify({'message': 'Video saved successfully', 'video_path': video_path})
 
 
 @app.route('/detect', methods=['POST'])
@@ -172,7 +172,7 @@ def get_last_detections():
         'box_width': detection.box_width,
         'box_height': detection.box_height,
         'class_name': detection.class_name,
-        'confidence': float(detection.confidence),  # Converta para float
+        'confidence': float(detection.confidence),
         'user_input_id': detection.user_input_id
     } for detection in last_10_detections]
 
@@ -182,8 +182,8 @@ def get_last_detections():
 @app.route('/health_check', methods=['GET'])
 def health_check():
     if model is None:
-        return "Model is not loaded"
-    return f"Model {model.model_name} is loaded"
+        return jsonify({'message': "Model is not loaded"})
+    return jsonify({'message': f"Model {model.model_name} is loaded"})
 
 
 @app.route('/load_model', methods=['POST'])
@@ -191,7 +191,7 @@ def load_model():
     model_name = request.json['model_name']
     global model
     model = Model(model_name)
-    return f"Model {model_name} is loaded"
+    return jsonify({'message': f"Model {model_name} is loaded"})
 
 
 if __name__ == "__main__":
