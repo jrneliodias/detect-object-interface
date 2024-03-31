@@ -1,8 +1,6 @@
 import requests
 
 ENDPOINT = 'http://127.0.0.1:8080'
-test_video_path = r"C:\Users\jrnel\Downloads\people_program.mp4"
-
 video_name = '2024-03-31_18-36-15.mp4'
 
 
