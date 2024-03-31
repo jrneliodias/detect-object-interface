@@ -1,4 +1,5 @@
 from werkzeug.exceptions import HTTPException
+from flask import abort
 
 
 def allowed_file(filename: str):
@@ -11,9 +12,5 @@ def allowed_file(filename: str):
         An exception if the filetype is not allowed.
     """
 
-    file_extension = filename.split(
+    return filename.split(
         ".")[-1] in ("jpg", "jpeg", "png", "webp", "mp4", "mov", "avi")
-
-    if not file_extension:
-        raise HTTPException(
-            status_code=415, detail="Unsupported file provided.")
