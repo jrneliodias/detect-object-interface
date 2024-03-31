@@ -11,7 +11,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 cors = CORS(app, origins='*')
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = 'output-videos'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['INPUT_VIDEOS'] = './test-inputs/'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres2024@localhost/ai-detection'
@@ -50,6 +50,7 @@ def save_user_input_in_db(video_name, confidence_input, iou_input):
         db.session.add(new_input)
         db.session.commit()
         return new_input.id
+
     except Exception as e:
         print("Erro ao inserir dados:", str(e))
 
@@ -71,6 +72,7 @@ def save_detection_to_db(detection: dict, user_input_id):
         return new_detection
     except Exception as e:
         print("Erro ao inserir detecções no banco de dados:", str(e))
+        raise
 
 
 def save_all_detections_in_db(detections: list[dict], user_input_id: int):
@@ -96,6 +98,7 @@ def save_all_detections_in_db(detections: list[dict], user_input_id: int):
     except Exception as e:
         session.rollback()
         print("Erro ao inserir detecções no banco de dados:", str(e))
+        raise
 
 
 @app.route("/upload", methods=['POST'])
@@ -110,46 +113,56 @@ def upload_file():
 
     secured_filename = secure_filename(video_file.filename)
     video_path = app.config['INPUT_VIDEOS'] + secured_filename
+    app.config['OUTPUT_VDEO_PATH'] = video_path
     video_file.save(video_path)
 
-    return jsonify({'message': 'Video saved successfully', 'video_path': video_path})
+    return jsonify({'message': 'Video saved successfully'})
 
 
 @app.route('/detect', methods=['POST'])
 def detect():
+    try:
+        missing_props = [prop for prop in [
+            'confidence', 'iou'] if prop not in request.json]
+        if missing_props:
+            missing_props_str = ' '.join(
+                [f'"{prop}"' for prop in missing_props])
+            return jsonify({'error': f'Model parameter(s) {missing_props_str} is/are missing.'}), 400
 
-    if 'confidence' not in request.json or 'iou' not in request.json:
-        return jsonify({'message': 'model parameter is missing.'}), 400
+        # relative_video_path = request.json['video_path']
+        relative_video_path = app.config['OUTPUT_VDEO_PATH']
 
-    relative_video_path = request.json['video_path']
+        if not os.path.exists(relative_video_path):
+            return jsonify({'message': 'File not found.'}), 500
 
-    if not os.path.exists(relative_video_path):
-        return jsonify({'message': 'File not found.'}), 404
+        confidence = float(request.json['confidence'])
+        iou = float(request.json['iou'])
 
-    confidence = float(request.json['confidence'])
-    iou = float(request.json['iou'])
+        detections_list = DetectionsProcess()
+        ai_identify_objects = VideoProcessor(detections_list,
+                                             relative_video_path,
+                                             confidence,
+                                             iou)
 
-    detections_list = DetectionsProcess()
-    ai_identify_objects = VideoProcessor(detections_list,
-                                         relative_video_path,
-                                         confidence,
-                                         iou)
+        processed_video_path = ai_identify_objects.main_process()
 
-    processed_video_path = ai_identify_objects.main_process()
+        user_input_id = save_user_input_in_db(
+            processed_video_path, confidence, iou)
 
-    user_input_id = save_user_input_in_db(
-        processed_video_path, confidence, iou)
+        save_all_detections_in_db(
+            detections_list.all_detections, user_input_id)
 
-    save_all_detections_in_db(detections_list.all_detections, user_input_id)
+        return jsonify({'message': 'Video processed successfully',
+                        'processed_video_name': processed_video_path})
 
-    return jsonify({'message': 'Video processed successfully',
-                    'processed_video_path': processed_video_path})
+    except Exception as e:
+        return jsonify({'error': 'Erro ao inserir no Banco de Dados', 'message': str(e)}), 500
 
 
 @app.route("/result/<path:name>")
 def get_video(name):
 
-    directory = 'output-videos'
+    directory = app.config['UPLOAD_FOLDER']
     current_directory = os.getcwd()
     video_path = os.path.join(current_directory, directory)
     get_last_detections()
