@@ -5,7 +5,13 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
-import { Detection, detectObjects, getProcessedVideo, uploadFile } from "./services/apiService";
+import {
+    Detection,
+    detectObjects,
+    getLastDetections,
+    getProcessedVideo,
+    uploadFile
+} from "./services/apiService";
 
 
 interface UploadFileProps {
@@ -44,28 +50,6 @@ const UploadForm = ({ videoFile,
         console.log(iouValue)
     }
 
-
-    const getLastDetections = async () => {
-
-        try {
-
-            const getLastDeteectionsResponse = await axios.get(`http://localhost:8080/detections`)
-
-            toast.success('success in get the video')
-
-            onVideoProcessed(false)
-            if (getLastDeteectionsResponse.data) {
-                onLastDetections(getLastDeteectionsResponse.data)
-            }
-
-        } catch (error) {
-            onVideoProcessed(false)
-            toast.error("Error getting the video:" + error)
-            throw error
-
-        }
-    }
-
     const handleUpload = async () => {
         try {
             if (!videoFile) return
@@ -76,8 +60,10 @@ const UploadForm = ({ videoFile,
             if (!processedVideoPath) return
             const videoBlobURL = await getProcessedVideo(processedVideoPath)
             onVideoOutput(videoBlobURL);
-            await getLastDetections()
+            const lastDetections = await getLastDetections()
             onVideoProcessed(false)
+            onLastDetections(lastDetections);
+
 
         } catch (error) {
             onVideoProcessed(false)
