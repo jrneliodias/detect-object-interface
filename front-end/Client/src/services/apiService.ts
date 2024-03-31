@@ -19,6 +19,12 @@ interface ApiResponse {
   data: ApiData;
 }
 
+interface DetectionApiResponse {
+  message: string;
+  status: number;
+  data: Detection[];
+}
+
 export type Detection = {
   id: number;
   frame_number: number;
@@ -54,6 +60,10 @@ export const getVideoService = async (videoFileName: string): Promise<ApiRespons
   });
 };
 
+export const getDetectionsService = async (): Promise<DetectionApiResponse> => {
+  return await apiService.get("/detections");
+};
+
 export const uploadFile = async (videoFile: File | null, confidence: number, iou: number) => {
   if (!videoFile || !confidence || !iou) return;
   const formData = new FormData();
@@ -86,4 +96,13 @@ export const getProcessedVideo = async (processed_video_name: string) => {
   const videoBlobURL = URL.createObjectURL(new Blob([getProcessVideoResponse.data], { type: "video/mp4" }));
 
   return videoBlobURL;
+};
+
+export const getLastDetections = async (): Promise<Detection[]> => {
+  const getLastDetectionsResponse = await getDetectionsService();
+  const lastDetections = getLastDetectionsResponse.data;
+
+  toast.success("success in get the detections");
+
+  return lastDetections;
 };
