@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
-import { Detection } from "@/App";
+import { Detection } from "@/services/apiService";
+
 
 type DetectTableProps = {
 
