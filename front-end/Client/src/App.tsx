@@ -34,10 +34,10 @@ function App() {
 
   };
 
-
   const handleVideoOutput = (videoURL: string) => {
     setOutputVideo(videoURL)
   }
+
   return (
     <main className='w-9/12 flex flex-col mx-auto gap-5'>
       <h1 className='text-2xl font-bold'>AI Object Detection</h1>

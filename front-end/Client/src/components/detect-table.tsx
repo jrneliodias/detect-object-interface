@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { Detection } from "@/services/apiService";
 
@@ -10,11 +9,7 @@ type DetectTableProps = {
 
 export default function DetectTable({ lastDetections }: DetectTableProps) {
 
-    useEffect(() => {
 
-
-
-    }, [])
 
     return (
         <div className="container">
