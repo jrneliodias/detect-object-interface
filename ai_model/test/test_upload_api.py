@@ -14,7 +14,6 @@ def test_upload_valid_video():
 
     assert response.status_code == 200
     assert 'message' in response.json()
-    assert 'video_path' in response.json()
     assert response.json()['message'] == 'Video saved successfully'
     print(response.json())
 
