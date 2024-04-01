@@ -64,8 +64,8 @@ export const getDetectionsService = async (): Promise<DetectionApiResponse> => {
   return await apiService.get("/detections");
 };
 
-export const uploadFile = async (videoFile: File | null, confidence: number, iou: number) => {
-  if (!videoFile || !confidence || !iou) return;
+export const uploadFile = async (videoFile: File | null) => {
+  if (!videoFile) return;
   const formData = new FormData();
   formData.append("video", videoFile);
 
@@ -80,6 +80,10 @@ export const detectObjects = async (confidence: number, iou: number) => {
   if (!confidence || !iou) return;
 
   const processVideoResponse = await detectObjectsService(iou.toString(), confidence.toString());
+
+  if (processVideoResponse.status !== 200) {
+    throw new Error("Bad request: " + processVideoResponse.data.message);
+  }
   const processed_video_path = processVideoResponse.data.processed_video_name;
 
   toast.success(processVideoResponse.data.message);
@@ -88,6 +92,9 @@ export const detectObjects = async (confidence: number, iou: number) => {
 
 export const getProcessedVideo = async (processed_video_name: string) => {
   const getProcessVideoResponse = await getVideoService(processed_video_name);
+  if (getProcessVideoResponse.status !== 200) {
+    throw new Error("Bad request: " + getProcessVideoResponse.data.message);
+  }
 
   if (!(getProcessVideoResponse.data instanceof Blob)) {
     throw new Error("Response data is not of type Blob");
@@ -100,8 +107,11 @@ export const getProcessedVideo = async (processed_video_name: string) => {
 
 export const getLastDetections = async (): Promise<Detection[]> => {
   const getLastDetectionsResponse = await getDetectionsService();
-  const lastDetections = getLastDetectionsResponse.data;
 
+  if (getLastDetectionsResponse.status !== 200) {
+    throw new Error("Bad request: " + getLastDetectionsResponse.message);
+  }
+  const lastDetections = getLastDetectionsResponse.data;
   toast.success("success in get the detections");
 
   return lastDetections;
