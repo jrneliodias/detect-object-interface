@@ -132,7 +132,6 @@ def detect():
 
         # relative_video_path = request.json['video_path']
         relative_video_path = app.config['INPUT_VIDEO_PATH']
-        print(relative_video_path)
 
         if not os.path.exists(relative_video_path):
             return jsonify({'message': 'File not found.'}), 500
