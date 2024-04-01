@@ -13,7 +13,8 @@ app = Flask(__name__)
 cors = CORS(app, origins='*')
 UPLOAD_FOLDER = 'output-videos'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['INPUT_VIDEOS'] = './test-inputs/'
+app.config['INPUT_VIDEOS_FOLDER'] = './test-inputs/'
+app.config['INPUT_VIDEO_PATH'] = ''
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres2024@localhost/ai-detection'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy()
@@ -112,8 +113,8 @@ def upload_file():
         return jsonify({'message': 'Unsupported file provided.'}), 415
 
     secured_filename = secure_filename(video_file.filename)
-    video_path = app.config['INPUT_VIDEOS'] + secured_filename
-    app.config['OUTPUT_VDEO_PATH'] = video_path
+    video_path = app.config['INPUT_VIDEOS_FOLDER'] + secured_filename
+    app.config['INPUT_VIDEO_PATH'] = video_path
     video_file.save(video_path)
 
     return jsonify({'message': 'Video saved successfully'})
@@ -130,7 +131,8 @@ def detect():
             return jsonify({'error': f'Model parameter(s) {missing_props_str} is/are missing.'}), 400
 
         # relative_video_path = request.json['video_path']
-        relative_video_path = app.config['OUTPUT_VDEO_PATH']
+        relative_video_path = app.config['INPUT_VIDEO_PATH']
+        print(relative_video_path)
 
         if not os.path.exists(relative_video_path):
             return jsonify({'message': 'File not found.'}), 500
