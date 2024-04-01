@@ -10,7 +10,7 @@ export const apiService = axios.create({
 interface ApiData {
   video_path: string;
   message: string;
-  processed_video_path: string;
+  processed_video_name: string;
 }
 
 interface ApiResponse {
@@ -47,8 +47,8 @@ export const uploadFileService = async (formData: FormData): Promise<ApiData> =>
   }
 };
 
-export const detectObjectsService = async (videoPath: string, iou: string, confidence: string): Promise<ApiResponse> => {
-  return await apiService.post("/detect", { video_path: videoPath, iou, confidence });
+export const detectObjectsService = async (iou: string, confidence: string): Promise<ApiResponse> => {
+  return await apiService.post("/detect", { iou, confidence });
 };
 
 export const getVideoService = async (videoFileName: string): Promise<ApiResponse> => {
@@ -76,11 +76,11 @@ export const uploadFile = async (videoFile: File | null, confidence: number, iou
   return video_path;
 };
 
-export const detectObjects = async (video_path: string, confidence: number, iou: number) => {
+export const detectObjects = async (confidence: number, iou: number) => {
   if (!confidence || !iou) return;
 
-  const processVideoResponse = await detectObjectsService(video_path, iou.toString(), confidence.toString());
-  const processed_video_path = processVideoResponse.data.processed_video_path;
+  const processVideoResponse = await detectObjectsService(iou.toString(), confidence.toString());
+  const processed_video_path = processVideoResponse.data.processed_video_name;
 
   toast.success(processVideoResponse.data.message);
   return processed_video_path;

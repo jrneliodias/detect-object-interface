@@ -54,9 +54,8 @@ const UploadForm = ({ videoFile,
         try {
             if (!videoFile) return
             onVideoProcessed(true)
-            const uploadedVideoPath = await uploadFile(videoFile, confidence, iou)
-            if (!uploadedVideoPath) return
-            const processedVideoPath = await detectObjects(uploadedVideoPath, confidence, iou)
+            await uploadFile(videoFile, confidence, iou)
+            const processedVideoPath = await detectObjects(confidence, iou)
             if (!processedVideoPath) return
             const videoBlobURL = await getProcessedVideo(processedVideoPath)
             onVideoOutput(videoBlobURL);
