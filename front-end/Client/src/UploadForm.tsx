@@ -52,11 +52,15 @@ const UploadForm = ({ videoFile,
 
     const handleUpload = async () => {
         try {
-            if (!videoFile) return
+            if (!videoFile) {
+                throw new Error('No input video.');
+            }
             onVideoProcessed(true)
-            await uploadFile(videoFile, confidence, iou)
+            await uploadFile(videoFile)
             const processedVideoPath = await detectObjects(confidence, iou)
-            if (!processedVideoPath) return
+            if (!processedVideoPath) {
+                throw new Error('Error in process the video in server.');
+            }
             const videoBlobURL = await getProcessedVideo(processedVideoPath)
             onVideoOutput(videoBlobURL);
             const lastDetections = await getLastDetections()
@@ -69,7 +73,7 @@ const UploadForm = ({ videoFile,
             if (axios.isAxiosError(error) && error.response) {
                 toast.error("Error uploading file:" + error.response.data.message);
             } else {
-                toast.error("Error uploading file: " + (error as Error).message);
+                toast.error((error as Error).message);
             }
             throw error;
 
