@@ -39,3 +39,7 @@ cd ai_model
 python postgres\db\client.py
 python app.py
 ```
+
+### Apresentação do projeto
+[Video de apresentação](https://youtu.be/caQDQw47jpM)
+
