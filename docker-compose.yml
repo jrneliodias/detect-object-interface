@@ -1,12 +1,21 @@
 services:
   frontend:
     build: ./front-end
+    ports:
+      - 5173:5173
+  backend:
+    build: ./ai_model
+    ports:
+      - 8080:8080
+
   postgres:
     image: postgres
-    container_name: ai-videos-object-detection
+    container_name: db-container
     environment:
       POSTGRES_PASSWORD: postgres2024
       POSTGRES_USER: postgres
       POSTGRES_DB: ai-detection
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Persist data to the host machine
