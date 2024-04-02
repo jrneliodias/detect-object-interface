@@ -4,11 +4,15 @@ FROM python:3.9-slim
 # Install ffmpeg and other dependencies
 RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
 
+
 # Set the working directory inside the container
-WORKDIR /app
+WORKDIR /app/ai_model
 
 # Copy the requirements file to the working directory
 COPY requirements.txt .
+
+
+RUN apt-get update && apt-get install -y postgresql-server-dev-all
 
 # Install the required dependencies
 RUN pip install --upgrade pip && \
@@ -20,7 +24,7 @@ RUN pip install --upgrade pip && \
 COPY . .
 
 # Expose the port on which the app will run
-EXPOSE 5000
+EXPOSE 8080
 
 # Define the command to run the app
 CMD ["python", "app.py"]
