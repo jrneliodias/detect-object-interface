@@ -16,9 +16,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['INPUT_VIDEOS_FOLDER'] = './test-inputs/'
 app.config['INPUT_VIDEO_PATH'] = ''
 # Ser for usar sem docker
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres2024@localhost/ai-detection'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres2024@localhost/ai-detection'
 # com o docker
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:postgres2024@db-container/ai-detection'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:postgres2024@db-container/ai-detection'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy()
 db.init_app(app)

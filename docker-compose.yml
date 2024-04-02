@@ -3,11 +3,10 @@ services:
     build: ./front-end
     ports:
       - 5173:5173
-  backend:
-    build: ./ai_model
-    ports:
-      - 8080:8080
-
+  # backend:
+  #   build: ./ai_model
+  #   ports:
+  #     - 8080:8080
   postgres:
     image: postgres
     container_name: db-container
