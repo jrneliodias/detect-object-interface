@@ -15,7 +15,10 @@ UPLOAD_FOLDER = 'output-videos'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['INPUT_VIDEOS_FOLDER'] = './test-inputs/'
 app.config['INPUT_VIDEO_PATH'] = ''
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres2024@localhost/ai-detection'
+# Ser for usar sem docker
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres2024@localhost/ai-detection'
+# com o docker
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:postgres2024@db-container/ai-detection'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy()
 db.init_app(app)
@@ -157,7 +160,7 @@ def detect():
                         'processed_video_name': processed_video_path})
 
     except Exception as e:
-        return jsonify({'error': 'Erro ao inserir no Banco de Dados', 'message': str(e)}), 500
+        return jsonify({'error': 'Erro ao inserir no Banco de Dados', 'message': 'Erro de conexão com Banco de Dados'}), 500
 
 
 @app.route("/result/<path:name>")
