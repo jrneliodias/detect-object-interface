@@ -5,10 +5,10 @@ O sistema é dividdo em três áreas distintas: Frontend, Backend e banco de dad
 
 No frontend, optei por:
 
--React com Vite para uma experiência de desenvolvimento ágil.
--Shadcn Ui para componentes visuais consistentes e modernos.
--Tailwind CSS para facilitar a estilização e o design responsivo.
--ViTest para testes automatizados e garantia de qualidade.
+- React com Vite para uma experiência de desenvolvimento ágil.
+- Shadcn Ui para componentes visuais consistentes e modernos.
+- Tailwind CSS para facilitar a estilização e o design responsivo.
+- ViTest para testes automatizados e garantia de qualidade.
 
 Para o Backend, escolhi:
 
