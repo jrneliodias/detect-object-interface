@@ -22,7 +22,9 @@ No banco de dados, utilizamos:
 
 - Docker para criar ambientes isolados e facilitar a implantação.
 - Postgres SQL para armazenar e gerenciar os dados de forma eficiente e confiável.
-- Este projeto representou um verdadeiro desafio para mim, pois tive que lidar com diferentes tecnologias e arquiteturas, além de aprender a integrá-las de forma coesa. Desde a estruturação do frontend e do backend até a comunicação com o banco de dados, cada etapa foi uma oportunidade para aprimorar meus conhecimentos em arquitetura de software e práticas de Clean Code.
+
+## Considerações
+Este projeto representou um verdadeiro desafio para mim, pois tive que lidar com diferentes tecnologias e arquiteturas, além de aprender a integrá-las de forma coesa. Desde a estruturação do frontend e do backend até a comunicação com o banco de dados, cada etapa foi uma oportunidade para aprimorar meus conhecimentos em arquitetura de software e práticas de Clean Code.
 
 Além disso, a experiência de trabalhar com Flask para construir uma API robusta e eficiente, juntamente com a integração de um modelo de IA como uma ferramenta no processo, foi extremamente enriquecedora. Aprendi muito sobre como gerenciar erros, planejar rotas e garantir uma comunicação eficaz entre o servidor e o cliente.
 
@@ -31,7 +33,7 @@ Não posso deixar de mencionar minha jornada com Docker, onde adquiri habilidade
 
 ## Como executar o sistema
 
-## Instalando as dependências
+### **Instalando as dependências**
 
 ### Front-end (opcional pois está no docker-compose)
 
