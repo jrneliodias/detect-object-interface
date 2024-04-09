@@ -16,6 +16,7 @@ Para o Backend, escolhi:
 - Python como linguagem principal devido à sua versatilidade e poder.
 - Flask como framework web, oferecendo uma estrutura leve e flexível.
 - Pytest para testes unitários e de integração, garantindo a estabilidade do sistema.
+- Open CV para manipular os frames do video e desenhar a detecação do objeto
 - SQL Alchemy para a comunicação eficiente com o banco de dados e manipulação de dados.
 - E, é claro, YOLOv8 para a detecção de objetos com precisão e rapidez.
 
