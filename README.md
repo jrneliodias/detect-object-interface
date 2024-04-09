@@ -1,4 +1,4 @@
-# Objects Detections AI Interface
+# Video Objects Detections by AI Interface
 
 
 O sistema é dividdo em três áreas distintas: Frontend, Backend e banco de dados, cada uma desempenhando um papel fundamental no funcionamento do projeto. Vamos dar uma olhada nas tecnologias que utilizamos em cada uma delas:
