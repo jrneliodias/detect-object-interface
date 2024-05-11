@@ -122,7 +122,7 @@ def upload_file():
 
     secured_filename = secure_filename(video_file.filename)
     current_directory = os.getcwd()
-    video_path = current_directory+"/test-inputs/" + secured_filename
+    video_path = current_directory+"\\test-inputs\\" + secured_filename
 
     video_file.save(video_path)
 
