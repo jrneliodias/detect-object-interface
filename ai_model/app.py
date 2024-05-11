@@ -121,8 +121,9 @@ def upload_file():
         return jsonify({'message': 'Unsupported file provided.'}), 415
 
     secured_filename = secure_filename(video_file.filename)
-    video_path = app.config['INPUT_VIDEOS_FOLDER'] + secured_filename
-    app.config['INPUT_VIDEO_PATH'] = video_path
+    current_directory = os.getcwd()
+    video_path = current_directory+"/test-inputs/" + secured_filename
+
     video_file.save(video_path)
 
     return jsonify({'message': 'Video saved successfully'})
