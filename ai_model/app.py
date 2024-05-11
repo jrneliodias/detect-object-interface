@@ -123,7 +123,7 @@ def upload_file():
     secured_filename = secure_filename(video_file.filename)
     current_directory = os.getcwd()
     video_path = current_directory+"\\test-inputs\\" + secured_filename
-
+    app.config['INPUT_VIDEO_PATH'] = video_path
     video_file.save(video_path)
 
     return jsonify({'message': 'Video saved successfully'})
