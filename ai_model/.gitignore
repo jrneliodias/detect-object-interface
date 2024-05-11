@@ -3,3 +3,4 @@ venv
 frames
 __pycache__
 detection.json
+.env

@@ -7,7 +7,10 @@ from utils import allowed_file
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from flask_sqlalchemy import SQLAlchemy
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 app = Flask(__name__)
 cors = CORS(app, origins='*')
@@ -16,7 +19,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['INPUT_VIDEOS_FOLDER'] = './test-inputs/'
 app.config['INPUT_VIDEO_PATH'] = ''
 # Ser for usar sem docker
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres2024@localhost/ai-detection'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+    "SQLALCHEMY_DATABASE_URL")
+# app.config['SQLALCHEMY_DATABASE_URL'] = 'postgresql://postgres:postgres2024@localhost/ai-detection'
 # com o docker
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:postgres2024@db-container/ai-detection'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -198,6 +203,26 @@ def get_last_detections():
         return jsonify({'error': 'Erro ao inserir no Banco de Dados', 'message': str(e)}), 500
 
 
+@app.route('/delete_videos', methods=['DELETE'])
+def delete_videos():
+    directory = app.config['UPLOAD_FOLDER']
+    current_directory = os.getcwd()
+    video_path = os.path.join(current_directory, directory)
+    files = os.listdir(video_path)
+    for file in files:
+        file_path = os.path.join(video_path, file)
+        os.remove(file_path)
+
+    input_videos_dir = app.config['INPUT_VIDEOS_FOLDER']
+    input_video_path = os.path.join(current_directory, input_videos_dir)
+    files = os.listdir(input_video_path)
+    for file in files:
+        file_path = os.path.join(input_video_path, file)
+        os.remove(file_path)
+
+    return jsonify({'message': 'Videos deleted successfully'})
+
+
 @app.route('/health_check', methods=['GET'])
 def health_check():
     if model is None:
@@ -215,4 +240,4 @@ def load_model():
 
 if __name__ == "__main__":
     # app.run(debug=True, port=8080)
-    app.run(host='0.0.0.0', port=8080)
+    app.run(host='0.0.0.0', port=os.environ.get('PORT', 8080))

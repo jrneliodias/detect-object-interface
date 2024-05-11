@@ -1,12 +1,11 @@
 import psycopg2
-from psycopg2 import sql
-
+import os
 # Configurações do banco de dados
-DB_NAME = 'ai-detection'
-DB_USER = 'postgres'
-DB_PASSWORD = 'postgres2024'
-DB_HOST = 'localhost'
-DB_PORT = '5432'
+DB_NAME = os.environ.get("DB_NAME")
+DB_USER = os.environ.get("DB_USER")
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
+DB_HOST = os.environ.get("DB_HOST")
+DB_PORT = os.environ.get("DB_PORT")
 
 
 # Conecta ao banco de dados
@@ -20,8 +19,6 @@ conn = psycopg2.connect(
 
 # Cria um cursor para executar comandos SQL
 cur = conn.cursor()
-
-# Função para executar uma migração SQL
 
 
 def run_migration(sql_file):
